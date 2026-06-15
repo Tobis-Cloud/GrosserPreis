@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1, minimum-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#0a0e1a" />
+  <title>Großer Preis – Ergebnisse</title>
+  <link rel="icon" type="image/jpeg" href="grosserpreis.jpeg" />
+  <link rel="apple-touch-icon" href="grosserpreis.jpeg" />
+  <link rel="stylesheet" href="css/style.css" />
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="results-page" id="resultsPage">
+
+  <!-- Konfetti-Canvas -->
+  <canvas id="confettiCanvas" style="position:fixed;inset:0;pointer-events:none;z-index:999;"></canvas>
+
+  <!-- Überschrift -->
+  <div style="text-align:center;">
+    <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.15em;color:var(--text-dim);">
+      🏆 SPIELENDE
+    </div>
+    <h1 id="gameNameTitle" style="font-size:clamp(24px,5vw,48px);font-weight:900;color:var(--gold);text-shadow:0 0 30px var(--gold-glow);margin-top:6px;">
+      GROSSER PREIS
+    </h1>
+  </div>
+
+  <!-- Gewinner-Karte -->
+  <div class="winner-card anim-in" id="winnerCard">
+    <div class="winner-trophy">🏆</div>
+    <div class="winner-label">Gewinner</div>
+    <div class="winner-name" id="winnerName">–</div>
+    <div class="winner-score" id="winnerScore">0 Punkte</div>
+  </div>
+
+  <!-- Podium (alle Teams) -->
+  <div style="width:100%;max-width:800px;">
+    <div class="section-title" style="margin-bottom:12px;">Gesamtergebnis</div>
+    <div class="podium-grid" id="podiumGrid"></div>
+  </div>
+
+  <!-- Punkte-Verlauf Chart -->
+  <div class="chart-card" style="max-width:900px;">
+    <div class="chart-title">📈 Punkteverlauf</div>
+    <canvas id="scoreChart" height="280"></canvas>
+  </div>
+
+  <!-- Vollständiger Log -->
+  <div class="log-card" style="max-width:900px;width:100%;">
+    <div class="section-title" style="margin-bottom:12px;">📋 Alle Punkte-Vergaben</div>
+    <div id="historyLog"></div>
+  </div>
+
+  <!-- Buttons -->
+  <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;padding-bottom:40px;">
+    <button class="btn btn-primary" id="btnPlayAgain" style="animation:none;">▶ Nochmal spielen</button>
+    <a href="index.html" class="btn">⚙️ Neue Konfiguration</a>
+  </div>
+
+</div>
+
+<script src="js/storage.js"></script>
+<script src="js/results.js"></script>
+</body>
+</html>

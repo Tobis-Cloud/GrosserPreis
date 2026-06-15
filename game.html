@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1, minimum-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0a0e1a" />
+  <title>Großer Preis – Spielfeld</title>
+  <link rel="icon" type="image/jpeg" href="grosserpreis.jpeg" />
+  <link rel="apple-touch-icon" href="grosserpreis.jpeg" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="game-page" id="gamePage">
+
+  <!-- ══ SCORE-LEISTE ══ -->
+  <div class="score-bar" id="scoreBar">
+    <div class="game-title-bar" id="gameTitleBar">GROSSER PREIS</div>
+    <div style="flex:1;display:flex;gap:8px;flex-wrap:wrap;" id="scoreCards"></div>
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+      <div id="timerDisplay" style="font-size:20px;font-weight:900;color:var(--gold);min-width:36px;text-align:center;display:none;"></div>
+      <button class="hamburger" id="hamburgerBtn" aria-label="Menü">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ SPIELFELD ══ -->
+  <div class="board-wrap">
+    <div class="game-board" id="gameBoard"></div>
+  </div>
+
+</div>
+
+<!-- ══ FRAGEN-OVERLAY ══ -->
+<div class="question-overlay" id="questionOverlay">
+  <div style="width:min(960px,98vw);display:flex;flex-direction:column;align-items:center;gap:0;">
+
+    <!-- Kategorie + Punkte -->
+    <div class="q-cat-label" id="oCatLabel"></div>
+    <div class="q-pts-big" id="oPtsBig"></div>
+    <div id="oJokerBadge" class="q-joker-badge" style="display:none;">⭐ Joker-Frage!</div>
+
+    <!-- Frage -->
+    <div id="oQuestionBlock" style="display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;">
+      <div class="q-text" id="oQuestionText"></div>
+      <div class="q-media" id="oQuestionMedia"></div>
+    </div>
+
+    <!-- Antwort -->
+    <div id="oAnswerBlock" class="answer-block" style="display:none;">
+      <div class="answer-label">Antwort</div>
+      <div class="answer-text" id="oAnswerText"></div>
+      <div class="q-media" id="oAnswerMedia"></div>
+    </div>
+
+    <!-- Spielleiter-Hinweis für Antwort -->
+    <div id="oSpieleiterHint" class="spielleiter-hint" style="display:none;">🔒 Spielleiter: Klicken zum Aufdecken</div>
+
+    <!-- Punkte vergeben -->
+    <div id="oAwardPanel" class="award-panel" style="display:none;">
+      <div class="award-title">Wer bekommt die Punkte?</div>
+      <div class="award-grid" id="oAwardGrid"></div>
+      <div id="oNegativeRow" class="award-negative" style="display:none;">
+        <label class="toggle-wrap" style="justify-content:center;">
+          <div class="toggle"><input type="checkbox" id="oNegativeCheck" /><span class="toggle-slider"></span></div>
+          <span style="font-size:13px;color:var(--text-dim);">Punkte abziehen statt gutschreiben</span>
+        </label>
+      </div>
+      <div class="award-actions">
+        <button class="btn btn-sm text-dim" id="oBtnNobody">Niemand (überspringen)</button>
+        <button class="btn btn-primary btn-sm" id="oBtnAward" style="animation:none;">✓ Punkte vergeben</button>
+      </div>
+    </div>
+
+    <div class="q-hint" id="oHint">Tippen / Klicken zum Weiter</div>
+  </div>
+</div>
+
+<!-- ══ PUNKTE-VERLAUF MODAL ══ -->
+<div class="history-modal" id="historyModal">
+  <div class="history-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div style="font-size:16px;font-weight:700;color:var(--gold);" id="histModalTitle">Punkteverlauf</div>
+      <button class="btn btn-icon btn-sm" id="closeHistModal">✕</button>
+    </div>
+    <div id="histModalContent"></div>
+  </div>
+</div>
+
+<!-- ══ SIDE-PANEL (Hamburger) ══ -->
+<div class="side-overlay" id="sideOverlay"></div>
+<div class="side-panel" id="sidePanel">
+  <div class="side-panel-header">
+    <span class="side-panel-title">⚙️ Spieloptionen</span>
+    <button class="btn btn-icon btn-sm" id="closeSidePanel">✕</button>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:18px;">
+
+    <label class="toggle-wrap">
+      <div class="toggle"><input type="checkbox" id="sp_chkSpieleiter" /><span class="toggle-slider"></span></div>
+      <label for="sp_chkSpieleiter">Spielleiter-Modus</label>
+    </label>
+
+    <label class="toggle-wrap">
+      <div class="toggle"><input type="checkbox" id="sp_chkNegative" /><span class="toggle-slider"></span></div>
+      <label for="sp_chkNegative">Minuspunkte erlaubt</label>
+    </label>
+
+    <div class="divider"></div>
+
+    <div class="section-title" style="margin-bottom:8px;">Punktestand manuell</div>
+    <div id="spScoreList" style="display:flex;flex-direction:column;gap:8px;"></div>
+
+    <div class="divider"></div>
+
+    <button class="btn" id="sp_btnResults" style="width:100%;">🏆 Zu den Ergebnissen</button>
+    <a href="index.html" class="btn" style="width:100%;text-align:center;">← Zurück zur Konfiguration</a>
+  </div>
+</div>
+
+<!-- ══ TOAST ══ -->
+<div id="toast" style="
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);
+  background:#1e2a3a;border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:10px 20px;font-size:14px;font-weight:600;
+  opacity:0;transition:all 0.3s;pointer-events:none;z-index:3000;white-space:nowrap;
+"></div>
+
+<script src="js/storage.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>

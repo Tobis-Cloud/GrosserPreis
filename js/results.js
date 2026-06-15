@@ -349,14 +349,19 @@ function downloadResultsImage() {
   a.click();
 }
 
+let isUnloading = false;
+window.addEventListener('beforeunload', () => { isUnloading = true; });
+
 function checkRestoreFullscreen() {
   const pref = localStorage.getItem('gp_fullscreen_pref') === 'true';
   if (pref && !document.fullscreenElement) {
     const handler = () => {
       document.documentElement.requestFullscreen().catch(() => {});
-      document.removeEventListener('click', handler);
+      document.removeEventListener('click', handler, true);
+      document.removeEventListener('keydown', handler, true);
     };
-    document.addEventListener('click', handler);
+    document.addEventListener('click', handler, true);
+    document.addEventListener('keydown', handler, true);
   }
 }
 

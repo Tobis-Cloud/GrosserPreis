@@ -37,6 +37,7 @@ function init() {
   attachModalListeners();
   attachHamburgerListeners();
   updateHeaderTitle();
+  checkActiveGame();
 }
 
 // =============================================
@@ -86,6 +87,10 @@ function attachSettingsListeners() {
     'Alle Kategorien, Fragen, Teams und Einstellungen werden gelöscht. Das kann nicht rückgängig gemacht werden.',
     () => { S.resetAll(); location.reload(); }
   ));
+
+  const btnResume = $('btnResume');
+  if (btnResume) btnResume.addEventListener('click', resumeGame);
+}
 
   // Live-Sync Spielname → Header
   $('inputGameName').addEventListener('input', () => {
@@ -592,6 +597,22 @@ function startGame() {
   ));
   if (!hasAnyQ) { showToast('⚠ Noch keine Fragen konfiguriert'); return; }
 
+  const activeGs = S.getGameState();
+  if (activeGs && activeGs.answeredIds && activeGs.answeredIds.length > 0) {
+    const totalQ = cats.reduce((sum, c) => sum + c.questions.length, 0);
+    if (activeGs.answeredIds.length < totalQ) {
+      confirmAction(
+        'Neues Spiel starten?',
+        'Es läuft bereits ein Spiel. Der aktuelle Spielstand wird gelöscht und alle Punkte zurückgesetzt. Fortfahren?',
+        doStartNewGame
+      );
+      return;
+    }
+  }
+  doStartNewGame();
+}
+
+function doStartNewGame() {
   // Spielstand initialisieren
   const gameState = {
     startedAt:    Date.now(),
@@ -601,6 +622,32 @@ function startGame() {
   };
   S.saveGameState(gameState);
   window.location.href = 'game.html';
+}
+
+function resumeGame() {
+  window.location.href = 'game.html';
+}
+
+function checkActiveGame() {
+  const activeGs = S.getGameState();
+  const btnResume = $('btnResume');
+  const spBtnResume = $('sp_btnResume');
+  
+  if (activeGs && activeGs.answeredIds && activeGs.teams) {
+    const totalQ = cats.reduce((sum, c) => sum + c.questions.length, 0);
+    const answeredAll = activeGs.answeredIds.length >= totalQ;
+    
+    if (!answeredAll && totalQ > 0) {
+      if (btnResume) btnResume.style.display = 'inline-block';
+      if (spBtnResume) spBtnResume.style.display = 'block';
+    } else {
+      if (btnResume) btnResume.style.display = 'none';
+      if (spBtnResume) spBtnResume.style.display = 'none';
+    }
+  } else {
+    if (btnResume) btnResume.style.display = 'none';
+    if (spBtnResume) spBtnResume.style.display = 'none';
+  }
 }
 
 // =============================================
@@ -615,6 +662,9 @@ function attachHamburgerListeners() {
     closeSidePanel();
     $('btnResetAll').click();
   });
+
+  const spBtnResume = $('sp_btnResume');
+  if (spBtnResume) spBtnResume.addEventListener('click', resumeGame);
 
   // Sync side-panel toggles ↔ main toggles
   $('sp_chkNegative').addEventListener('change', e => {

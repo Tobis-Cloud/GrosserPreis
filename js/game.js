@@ -599,11 +599,7 @@ function attachHamburgerListeners() {
     if ($('oNegativeRow')) $('oNegativeRow').style.display = cfg.allowNegativePoints ? 'flex' : 'none';
   });
 
-  $('sp_btnResults').addEventListener('click', () => {
-    if (confirm('Möchtest du das Spiel wirklich vorzeitig beenden und die Auswertung anzeigen?')) {
-      window.location.href = 'results.html';
-    }
-  });
+  $('sp_btnResults').addEventListener('click', () => window.location.href = 'results.html');
 
   // Undo / Redo
   $('sp_btnUndo').addEventListener('click', () => { closeSidePanel(); undoLastAward(); });

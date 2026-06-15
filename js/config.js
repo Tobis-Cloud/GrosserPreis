@@ -71,7 +71,7 @@ function readSettingsUI() {
 
   return {
     gameName:            $('inputGameName').value.trim() || 'Großer Preis',
-    pointSteps:          steps.length ? steps : [100,200,300,400,500],
+    pointSteps:          steps.length ? steps : [100,80,60,40,20],
     timerSeconds:        parseInt($('inputTimer').value, 10) || 0,
     allowNegativePoints: $('chkNegative').checked,
     startingTeamId:      cfg.startingTeamId,

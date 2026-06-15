@@ -12,7 +12,7 @@ const GP_KEYS = {
 
 const DEFAULT_CONFIG = {
   gameName: 'Großer Preis',
-  pointSteps: [100, 200, 300, 400, 500],
+  pointSteps: [100, 80, 60, 40, 20],
   allowNegativePoints: false,
   startingTeamId: null,
   timerSeconds: 0,

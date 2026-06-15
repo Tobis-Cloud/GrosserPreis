@@ -49,11 +49,25 @@ function init() {
   updateSidePanelScores();
   updateSidePanelTeamSelector();
 
-  // Tastatur-Shortcuts: Ctrl+Z / Ctrl+Y
+  // Tastatur-Shortcuts: Ctrl+Z / Ctrl+Y & Leertaste zum Durchklicken
   document.addEventListener('keydown', e => {
     if (e.ctrlKey || e.metaKey) {
       if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); undoLastAward(); }
       if (e.key === 'y' || (e.key === 'z' && e.shiftKey)) { e.preventDefault(); redoLastAward(); }
+    }
+
+    // Leertaste zum Durchklicken (Frage -> Antwort -> Punkte vergeben)
+    if (e.key === ' ' || e.key === 'Spacebar') {
+      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+        return;
+      }
+      if (overlayState === 1) {
+        e.preventDefault();
+        showAnswer();
+      } else if (overlayState === 2) {
+        e.preventDefault();
+        showAwardPanel();
+      }
     }
   });
 }

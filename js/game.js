@@ -97,6 +97,16 @@ function init() {
     }
   });
   checkRestoreFullscreen();
+
+  // Tastaturfokus ausblenden bei Mausbewegung
+  let lastMouseX = 0;
+  let lastMouseY = 0;
+  document.addEventListener('mousemove', e => {
+    if (e.clientX === lastMouseX && e.clientY === lastMouseY) return;
+    lastMouseX = e.clientX;
+    lastMouseY = e.clientY;
+    document.querySelectorAll('.game-cell.focused').forEach(el => el.classList.remove('focused'));
+  });
 }
 
 // =============================================

@@ -37,6 +37,9 @@ function init() {
   attachModalListeners();
   attachHamburgerListeners();
   updateHeaderTitle();
+
+  const btnFs = $('btnFullscreen');
+  if (btnFs) btnFs.addEventListener('click', toggleFullscreen);
 }
 
 // =============================================
@@ -925,6 +928,27 @@ function gpWrapText(ctx, text, x, y, maxW, lineH, maxLines = 3) {
   }
   if (line.trim()) ctx.fillText(line.trim(), x, y);
 }
+
+// =============================================
+// VOLLBILDMODUS
+// =============================================
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(err => {
+      showToast('Vollbildmodus konnte nicht aktiviert werden');
+    });
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+document.addEventListener('fullscreenchange', () => {
+  const btn = $('btnFullscreen');
+  if (btn) {
+    btn.textContent = document.fullscreenElement ? '🗗' : '⛶';
+    btn.title = document.fullscreenElement ? 'Vollbild beenden' : 'Vollbildmodus';
+  }
+});
 
 // ── START ──
 init();

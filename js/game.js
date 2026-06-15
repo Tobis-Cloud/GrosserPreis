@@ -38,7 +38,7 @@ function init() {
   }
   if (!gs.undoneHistory) gs.undoneHistory = [];
 
-  $('gameTitleBar').textContent = (cfg.gameName || 'Großer Preis').toUpperCase();
+  $('gameTitleBar').textContent = cfg.gameName || 'Großer Preis';
   renderScoreBar();
   renderBoard();
   updateCurrentTeamDisplay();
@@ -590,6 +590,10 @@ function attachHamburgerListeners() {
   // Undo / Redo
   $('sp_btnUndo').addEventListener('click', () => { closeSidePanel(); undoLastAward(); });
   $('sp_btnRedo').addEventListener('click', () => { closeSidePanel(); redoLastAward(); });
+
+  // Fullscreen
+  const btnFs = $('btnFullscreen');
+  if (btnFs) btnFs.addEventListener('click', toggleFullscreen);
 }
 
 function syncSidePanel() {
@@ -694,6 +698,27 @@ function hexToRgba(hex, alpha) {
   const b = parseInt(hex.slice(5,7),16);
   return `rgba(${r},${g},${b},${alpha})`;
 }
+
+// =============================================
+// VOLLBILDMODUS
+// =============================================
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(err => {
+      showToast('Vollbildmodus konnte nicht aktiviert werden');
+    });
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+document.addEventListener('fullscreenchange', () => {
+  const btn = $('btnFullscreen');
+  if (btn) {
+    btn.textContent = document.fullscreenElement ? '🗗' : '⛶';
+    btn.title = document.fullscreenElement ? 'Vollbild beenden' : 'Vollbildmodus';
+  }
+});
 
 // ── START ──
 init();

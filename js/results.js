@@ -12,7 +12,7 @@ const $ = id => document.getElementById(id);
 function init() {
   if (!gs) { window.location.href = 'index.html'; return; }
 
-  $('gameNameTitle').textContent = (cfg.gameName || 'Großer Preis').toUpperCase();
+  $('gameNameTitle').textContent = cfg.gameName || 'Großer Preis';
 
   const sorted = [...gs.teams].sort((a,b) => b.score - a.score);
 

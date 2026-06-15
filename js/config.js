@@ -89,7 +89,7 @@ function attachSettingsListeners() {
 
   // Live-Sync Spielname → Header
   $('inputGameName').addEventListener('input', () => {
-    $('headerTitle').textContent = $('inputGameName').value.toUpperCase() || 'GROSSER PREIS';
+    $('headerTitle').textContent = $('inputGameName').value.trim() || 'Großer Preis';
   });
 }
 
@@ -110,7 +110,7 @@ function saveSettings(showHint = true) {
 }
 
 function updateHeaderTitle() {
-  $('headerTitle').textContent = (cfg.gameName || 'Großer Preis').toUpperCase();
+  $('headerTitle').textContent = cfg.gameName || 'Großer Preis';
 }
 
 // Wenn Punkteschritte geändert → Kategorien anpassen

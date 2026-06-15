@@ -574,13 +574,20 @@ input[type="color"] {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+.game-page,
+.question-overlay,
+.history-modal,
+.side-panel {
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
 }
 .game-page input,
-.game-page textarea {
+.game-page textarea,
+.side-panel input,
+.side-panel textarea {
   user-select: text;
   -webkit-user-select: text;
   -moz-user-select: text;

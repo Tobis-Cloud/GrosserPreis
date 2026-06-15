@@ -19,6 +19,10 @@ let overlayState  = 0;
 let currentCatIdx = null;
 let currentQIdx   = null;
 let selectedTeams = new Set();
+
+// ── Tastatur-Fokus (Hauptansicht) ──
+let focusCatIdx = 0;
+let focusQIdx   = 0;
 let currentGroupId = null;   // für Undo-Gruppierung
 
 // ── Timer ──
@@ -49,24 +53,46 @@ function init() {
   updateSidePanelScores();
   updateSidePanelTeamSelector();
 
-  // Tastatur-Shortcuts: Ctrl+Z / Ctrl+Y & Leertaste zum Durchklicken
+  // Tastatur-Shortcuts: Steuerung, Leertaste, Enter & Pfeiltasten
   document.addEventListener('keydown', e => {
     if (e.ctrlKey || e.metaKey) {
       if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); undoLastAward(); }
       if (e.key === 'y' || (e.key === 'z' && e.shiftKey)) { e.preventDefault(); redoLastAward(); }
+      return;
     }
 
-    // Leertaste zum Durchklicken (Frage -> Antwort -> Punkte vergeben)
-    if (e.key === ' ' || e.key === 'Spacebar') {
-      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
-        return;
+    const isInputActive = document.activeElement && 
+      (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA');
+    if (isInputActive) return;
+
+    if (overlayState === 0) {
+      // Hauptansicht: Pfeiltasten & Enter
+      if (e.key === 'ArrowUp') {
+        e.preventDefault(); moveFocus(0, -1);
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault(); moveFocus(0, 1);
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault(); moveFocus(-1, 0);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault(); moveFocus(1, 0);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const qId = cats[focusCatIdx]?.questions[focusQIdx]?.id;
+        if (qId && !gs.answeredIds.includes(qId)) {
+          openQuestion(focusCatIdx, focusQIdx);
+        }
       }
-      if (overlayState === 1) {
+    } else {
+      // Overlay geöffnet: Leertaste oder Enter zum Durchklicken
+      if (e.key === ' ' || e.key === 'Spacebar' || e.key === 'Enter') {
         e.preventDefault();
-        showAnswer();
-      } else if (overlayState === 2) {
-        e.preventDefault();
-        showAwardPanel();
+        if (overlayState === 1) {
+          showAnswer();
+        } else if (overlayState === 2) {
+          showAwardPanel();
+        } else if (e.key === 'Enter' && (overlayState === 3 || overlayState === 4)) {
+          awardPoints();
+        }
       }
     }
   });
@@ -168,6 +194,7 @@ function renderBoard() {
       board.appendChild(cell);
     });
   });
+  keepOrInitFocus();
 }
 
 // =============================================
@@ -711,6 +738,78 @@ function hexToRgba(hex, alpha) {
   const g = parseInt(hex.slice(3,5),16);
   const b = parseInt(hex.slice(5,7),16);
   return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// =============================================
+// TASTATUR-NAVIGATIONS-HILFSFUNKTIONEN
+// =============================================
+function keepOrInitFocus() {
+  const currentQId = cats[focusCatIdx]?.questions[focusQIdx]?.id;
+  if (currentQId && !gs.answeredIds.includes(currentQId)) {
+    updateFocusHighlight();
+    return;
+  }
+  initFocus();
+}
+
+function initFocus() {
+  for (let r = 0; r < cfg.pointSteps.length; r++) {
+    for (let c = 0; c < cats.length; c++) {
+      const qId = cats[c].questions[r]?.id;
+      if (!gs.answeredIds.includes(qId)) {
+        focusCatIdx = c;
+        focusQIdx = r;
+        updateFocusHighlight();
+        return;
+      }
+    }
+  }
+}
+
+function updateFocusHighlight() {
+  document.querySelectorAll('.game-cell').forEach(el => el.classList.remove('focused'));
+  const qId = cats[focusCatIdx]?.questions[focusQIdx]?.id;
+  if (qId) {
+    const cell = $(`cell_${qId}`);
+    if (cell) cell.classList.add('focused');
+  }
+}
+
+function moveFocus(dirX, dirY) {
+  const numCats = cats.length;
+  const numSteps = cfg.pointSteps.length;
+  
+  let targetC = (focusCatIdx + dirX + numCats) % numCats;
+  let targetR = (focusQIdx + dirY + numSteps) % numSteps;
+  
+  const unanswered = [];
+  for (let c = 0; c < numCats; c++) {
+    for (let r = 0; r < numSteps; r++) {
+      const qId = cats[c].questions[r]?.id;
+      if (!gs.answeredIds.includes(qId)) {
+        unanswered.push({ c, r });
+      }
+    }
+  }
+  
+  if (!unanswered.length) return;
+  
+  let bestCell = null;
+  let minDist = Infinity;
+  
+  unanswered.forEach(cell => {
+    let dist = Math.abs(cell.c - targetC) + Math.abs(cell.r - targetR);
+    if (dist < minDist) {
+      minDist = dist;
+      bestCell = cell;
+    }
+  });
+  
+  if (bestCell) {
+    focusCatIdx = bestCell.c;
+    focusQIdx = bestCell.r;
+    updateFocusHighlight();
+  }
 }
 
 // =============================================

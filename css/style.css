@@ -651,6 +651,13 @@ input[type="color"] {
 }
 .game-cell:hover::after { opacity: 1; }
 .game-cell:hover { transform: scale(1.04); box-shadow: 0 8px 32px rgba(0,0,0,0.5); z-index: 2; }
+.game-cell.focused {
+  outline: 3px solid var(--gold);
+  outline-offset: -3px;
+  box-shadow: 0 0 20px var(--gold-glow);
+  transform: scale(1.02);
+  z-index: 5;
+}
 .game-cell.answered { opacity: 0.18; cursor: default; pointer-events: none; }
 .game-cell.is-joker { border-color: var(--gold); }
 .game-cell.is-joker::before {

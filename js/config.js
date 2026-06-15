@@ -200,7 +200,9 @@ function renderGrid() {
   const totalCols  = numCats + 1 + (numCats < MAX_CATS ? 1 : 0); // pts-label + cats + add-btn
 
   // CSS-Grid definieren: pts-label + Kategorien + ggf. Add-Button
-  const catCols = `60px repeat(${numCats}, minmax(130px, 1fr))${numCats < MAX_CATS ? ' 60px' : ''}`;
+  // Letztes Feld bekommt eigene Breite damit der "+"-Button nicht abgeschnitten wird
+  const addColW = numCats < MAX_CATS ? ' 140px' : '';
+  const catCols = `60px repeat(${numCats}, minmax(130px, 1fr))${addColW}`;
   grid.style.gridTemplateColumns = catCols;
 
   $('catCountLabel').textContent = `(${numCats}/${MAX_CATS})`;
@@ -456,6 +458,9 @@ function attachImportExportListeners() {
     if (e.target.files[0]) handleExcelFile(e.target.files[0]);
   });
 
+  // Bild-Download
+  $('btnDownloadImage').addEventListener('click', downloadQuestionsImage);
+
   // JSON Export
   $('btnExportJSON').addEventListener('click', () => {
     saveSettings(false);
@@ -689,6 +694,228 @@ function esc(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+// =============================================
+// BILD-DOWNLOAD: FRAGEN & ANTWORTEN ALS PNG
+// =============================================
+function downloadQuestionsImage() {
+  if (!cats.length) { showToast('Keine Kategorien vorhanden'); return; }
+
+  const IMG_W    = 1240;
+  const PAD      = 44;
+  const CAT_H    = 52;
+  const COL_H    = 28; // Header-Zeile
+  const ROW_H    = 76;
+  const TITLE_H  = 70;
+  const GAP      = 16;
+  const PTS_W    = 76;
+
+  const CAT_COLORS_HEX = ['#e63946','#2ec4b6','#4895ef','#f9c74f','#9b5de5','#06d6a0','#f77f00','#ff85a1'];
+
+  // Gesamthöhe berechnen
+  let totalH = PAD + TITLE_H;
+  cats.forEach(() => {
+    totalH += CAT_H + COL_H + cfg.pointSteps.length * ROW_H + GAP;
+  });
+  totalH += PAD;
+
+  const canvas = document.createElement('canvas');
+  canvas.width  = IMG_W;
+  canvas.height = totalH;
+  const ctx = canvas.getContext('2d');
+
+  // ── Hintergrund ──
+  ctx.fillStyle = '#0d1117';
+  ctx.fillRect(0, 0, IMG_W, totalH);
+  // subtiler Verlauf
+  const bg = ctx.createRadialGradient(IMG_W/2, 0, 0, IMG_W/2, totalH*0.4, IMG_W*0.8);
+  bg.addColorStop(0, 'rgba(88,40,200,0.10)');
+  bg.addColorStop(1, 'transparent');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, IMG_W, totalH);
+
+  // ── Titel ──
+  ctx.fillStyle = '#f5c842';
+  ctx.font = 'bold 32px system-ui, Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(cfg.gameName, IMG_W / 2, PAD + 36);
+  ctx.fillStyle = 'rgba(232,234,246,0.38)';
+  ctx.font = '15px system-ui, Arial, sans-serif';
+  ctx.fillText('Fragen & Antworten – Spielleiter-Übersicht', IMG_W / 2, PAD + 58);
+
+  let curY = PAD + TITLE_H;
+  const contentW = IMG_W - PAD * 2;
+  const qW = (contentW - PTS_W) * 0.52;
+  const aW = (contentW - PTS_W) - qW;
+
+  cats.forEach((cat, ci) => {
+    const color = CAT_COLORS_HEX[ci % CAT_COLORS_HEX.length];
+
+    // Kategorie-Header
+    gpRoundRect(ctx, PAD, curY, contentW, CAT_H, 10);
+    ctx.fillStyle = color;
+    ctx.fill();
+    // leichter Glanz
+    const shine = ctx.createLinearGradient(PAD, curY, PAD, curY + CAT_H);
+    shine.addColorStop(0, 'rgba(255,255,255,0.12)');
+    shine.addColorStop(1, 'rgba(255,255,255,0)');
+    gpRoundRect(ctx, PAD, curY, contentW, CAT_H, 10);
+    ctx.fillStyle = shine;
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 19px system-ui, Arial, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(cat.name.toUpperCase(), PAD + 18, curY + 34);
+    curY += CAT_H;
+
+    // Spalten-Header
+    ctx.fillStyle = 'rgba(255,255,255,0.04)';
+    ctx.fillRect(PAD, curY, contentW, COL_H);
+    ctx.fillStyle = 'rgba(232,234,246,0.35)';
+    ctx.font = 'bold 10px system-ui, Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('PTS', PAD + PTS_W / 2, curY + 18);
+    ctx.textAlign = 'left';
+    ctx.fillText('FRAGE', PAD + PTS_W + 10, curY + 18);
+    ctx.fillText('ANTWORT', PAD + PTS_W + qW + 10, curY + 18);
+    curY += COL_H;
+
+    // Fragen-Zeilen
+    cfg.pointSteps.forEach((pts, ri) => {
+      const q       = cat.questions[ri];
+      const isEven  = ri % 2 === 0;
+
+      // Zeilenhintergrund
+      ctx.fillStyle = q?.isJoker
+        ? 'rgba(245,200,66,0.07)'
+        : (isEven ? 'rgba(255,255,255,0.025)' : 'rgba(255,255,255,0.05)');
+      ctx.fillRect(PAD, curY, contentW, ROW_H);
+
+      // Joker-Rand
+      if (q?.isJoker) {
+        ctx.strokeStyle = 'rgba(245,200,66,0.45)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(PAD, curY, contentW, ROW_H);
+      }
+
+      // Punkte
+      ctx.fillStyle = '#f5c842';
+      ctx.font = 'bold 24px system-ui, Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(pts, PAD + PTS_W / 2, curY + 36);
+      if (q?.isJoker) {
+        ctx.fillStyle = 'rgba(245,200,66,0.7)';
+        ctx.font = '10px system-ui, Arial, sans-serif';
+        ctx.fillText('⭐ Joker', PAD + PTS_W / 2, curY + 54);
+      }
+
+      // Trenn-Linie Pts/Frage
+      ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(PAD + PTS_W, curY + 8);
+      ctx.lineTo(PAD + PTS_W, curY + ROW_H - 8);
+      ctx.stroke();
+
+      // Frage
+      ctx.fillStyle = '#e8eaf6';
+      ctx.font = '13px system-ui, Arial, sans-serif';
+      ctx.textAlign = 'left';
+      const qText = q?.question.text || '';
+      const qExtra = [];
+      if (q?.question.images?.length) qExtra.push(`📷 ${q.question.images.length}x Bild`);
+      if (q?.question.videoUrl) qExtra.push('🎥 Video');
+      gpWrapText(ctx, qText || (qExtra.length ? '' : '–'), PAD + PTS_W + 10, curY + 22, qW - 20, 17, 2);
+      if (qExtra.length) {
+        ctx.fillStyle = 'rgba(232,234,246,0.4)';
+        ctx.font = '11px system-ui, Arial, sans-serif';
+        ctx.fillText(qExtra.join('  '), PAD + PTS_W + 10, curY + ROW_H - 14);
+      }
+
+      // Trenn-Linie Frage/Antwort
+      ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(PAD + PTS_W + qW, curY + 8);
+      ctx.lineTo(PAD + PTS_W + qW, curY + ROW_H - 8);
+      ctx.stroke();
+
+      // Antwort
+      ctx.fillStyle = '#f5c842';
+      ctx.font = 'bold 13px system-ui, Arial, sans-serif';
+      const aText = q?.answer.text || '';
+      const aExtra = [];
+      if (q?.answer.images?.length) aExtra.push(`📷 ${q.answer.images.length}x Bild`);
+      if (q?.answer.videoUrl) aExtra.push('🎥 Video');
+      gpWrapText(ctx, aText || (aExtra.length ? '' : '–'), PAD + PTS_W + qW + 10, curY + 22, aW - 20, 17, 2);
+      if (aExtra.length) {
+        ctx.fillStyle = 'rgba(245,200,66,0.5)';
+        ctx.font = '11px system-ui, Arial, sans-serif';
+        ctx.fillText(aExtra.join('  '), PAD + PTS_W + qW + 10, curY + ROW_H - 14);
+      }
+
+      // Horizontale Trennlinie
+      ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(PAD, curY + ROW_H);
+      ctx.lineTo(PAD + contentW, curY + ROW_H);
+      ctx.stroke();
+
+      curY += ROW_H;
+    });
+
+    curY += GAP;
+  });
+
+  // Download
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${(cfg.gameName || 'GrosserPreis').replace(/\s+/g,'_')}_Fragenuebersicht.png`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('🖼 Bild heruntergeladen');
+  }, 'image/png');
+}
+
+function gpRoundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function gpWrapText(ctx, text, x, y, maxW, lineH, maxLines = 3) {
+  const words = String(text || '').split(' ');
+  let line = '';
+  let count = 0;
+  for (let n = 0; n < words.length; n++) {
+    const test = line + words[n] + ' ';
+    if (ctx.measureText(test).width > maxW && n > 0) {
+      ctx.fillText(line.trim(), x, y);
+      line = words[n] + ' ';
+      y += lineH;
+      count++;
+      if (count >= maxLines - 1) {
+        const rest = words.slice(n).join(' ');
+        ctx.fillText((line + rest).trim().slice(0, 60) + (rest.length > 40 ? '…' : ''), x, y);
+        return;
+      }
+    } else {
+      line = test;
+    }
+  }
+  if (line.trim()) ctx.fillText(line.trim(), x, y);
+}
 
 // ── START ──
 init();

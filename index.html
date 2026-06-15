@@ -42,10 +42,10 @@
   <!-- ══ TABS ══ -->
   <div style="padding:12px 20px 0;flex-shrink:0;">
     <div class="tabs" role="tablist">
-      <button class="tab active" data-tab="settings" role="tab">⚙️ Einstellungen</button>
+      <button class="tab active" data-tab="import" role="tab">📁 Import / Export</button>
+      <button class="tab" data-tab="settings" role="tab">⚙️ Einstellungen</button>
       <button class="tab" data-tab="teams" role="tab">👥 Teams</button>
       <button class="tab" data-tab="questions" role="tab">❓ Kategorien & Fragen</button>
-      <button class="tab" data-tab="import" role="tab">📁 Import / Export</button>
     </div>
   </div>
 
@@ -53,7 +53,7 @@
   <div style="flex:1;overflow-y:auto;padding:16px 20px 24px;">
 
     <!-- ─── TAB: EINSTELLUNGEN ─── -->
-    <div class="tab-pane active" id="tab-settings">
+    <div class="tab-pane" id="tab-settings">
       <div class="glass" style="padding:24px;max-width:680px;">
         <div class="section-title">Spieleinstellungen</div>
         <div style="display:flex;flex-direction:column;gap:18px;">
@@ -125,7 +125,7 @@
     </div><!-- /tab-questions -->
 
     <!-- ─── TAB: IMPORT / EXPORT ─── -->
-    <div class="tab-pane" id="tab-import">
+    <div class="tab-pane active" id="tab-import">
       <div style="display:flex;flex-direction:column;gap:20px;max-width:700px;">
 
         <!-- Excel -->
@@ -162,6 +162,17 @@
             <button class="btn" id="btnImportJSON">⬆ Konfiguration importieren</button>
             <input type="file" id="jsonFileInput" accept=".json" style="display:none;" />
           </div>
+        </div>
+
+        <!-- Bild-Download -->
+        <div class="glass" style="padding:24px;">
+          <div class="section-title">🖼 Übersicht als Bild herunterladen</div>
+          <p class="text-sm text-dim mb-16">
+            Lädt alle Kategorien, Fragen und Antworten als <strong style="color:var(--text);">PNG-Bild</strong> herunter —
+            ideal zum Ausdrucken oder als Spickzettel für den Spielleiter.
+          </p>
+          <button class="btn" id="btnDownloadImage">⬇ Fragen &amp; Antworten als Bild (.png)</button>
+          <div class="text-xs text-muted mt-8">Bilder und Videos werden als Symbol angezeigt, nicht als Vorschau.</div>
         </div>
 
         <!-- Manueller Hinweis -->

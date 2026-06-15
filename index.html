@@ -81,11 +81,6 @@
             <label for="chkNegative">Minuspunkte erlaubt (bei falscher Antwort)</label>
           </label>
 
-          <label class="toggle-wrap">
-            <div class="toggle"><input type="checkbox" id="chkSpieleiter" /><span class="toggle-slider"></span></div>
-            <label for="chkSpieleiter">Spielleiter-Modus (Antwort erst nach Klick sichtbar – ideal für Beamer)</label>
-          </label>
-
           <div class="mt-8">
             <button class="btn btn-primary" id="btnSaveSettings" style="animation:none;">💾 Einstellungen speichern</button>
             <span id="saveSettingsHint" class="text-xs text-green mt-8" style="display:none;margin-left:10px;">✓ Gespeichert</span>
@@ -100,7 +95,10 @@
         <div class="section-title">Teams konfigurieren</div>
         <div id="teamList" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"></div>
         <button class="btn btn-green" id="btnAddTeam">+ Team hinzufügen</button>
-        <div class="text-xs text-muted mt-12">Teams können auch während des Spiels über das ☰ Menü angepasst werden.</div>
+        <div class="text-xs text-muted mt-12">
+          Das <strong style="color:var(--gold);">markierte Team</strong> (🚀) startet das Spiel.
+          Während des Spiels kann über das ☰ Menü jederzeit geändert werden, wer dran ist.
+        </div>
       </div>
     </div><!-- /tab-teams -->
 
@@ -204,13 +202,6 @@
   </div>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
-    <div class="form-group">
-      <label class="form-label">Spielleiter-Modus</label>
-      <label class="toggle-wrap">
-        <div class="toggle"><input type="checkbox" id="sp_chkSpieleiter" /><span class="toggle-slider"></span></div>
-        <label for="sp_chkSpieleiter">Ein/Aus</label>
-      </label>
-    </div>
     <div class="form-group">
       <label class="form-label">Minuspunkte</label>
       <label class="toggle-wrap">

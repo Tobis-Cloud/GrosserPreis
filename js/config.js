@@ -61,7 +61,6 @@ function loadSettingsUI() {
   $('inputPointSteps').value = cfg.pointSteps.join(',');
   $('inputTimer').value     = cfg.timerSeconds;
   $('chkNegative').checked  = cfg.allowNegativePoints;
-  $('chkSpieleiter').checked = cfg.spielleiterMode;
 }
 
 function readSettingsUI() {
@@ -75,7 +74,7 @@ function readSettingsUI() {
     pointSteps:          steps.length ? steps : [100,200,300,400,500],
     timerSeconds:        parseInt($('inputTimer').value, 10) || 0,
     allowNegativePoints: $('chkNegative').checked,
-    spielleiterMode:     $('chkSpieleiter').checked,
+    startingTeamId:      cfg.startingTeamId,
   };
 }
 
@@ -133,6 +132,7 @@ function renderTeams() {
   const list = $('teamList');
   list.innerHTML = '';
   teams.forEach((team, i) => {
+    const isStarter = cfg.startingTeamId === team.id || (!cfg.startingTeamId && i === 0);
     const card = document.createElement('div');
     card.className = 'team-card anim-in';
     card.style.animationDelay = `${i * 50}ms`;
@@ -142,7 +142,9 @@ function renderTeams() {
         data-idx="${i}" class="teamColorPicker" />
       <input type="text" class="team-name-input" value="${esc(team.name)}"
         data-idx="${i}" style="flex:1;" placeholder="Teamname" />
-      <button class="btn btn-icon-sm btn-danger" data-idx="${i}" title="Team löschen" class="delTeamBtn">✕</button>
+      <button class="btn btn-icon-sm btn-start-team" data-idx="${i}" title="${isStarter ? 'Startteam (aktiv)' : 'Als Startteam markieren'}" 
+        style="margin-right: 8px; border-color: ${isStarter ? 'var(--gold)' : 'transparent'}; background: ${isStarter ? 'rgba(255, 183, 3, 0.15)' : 'transparent'}; color: ${isStarter ? 'var(--gold)' : 'var(--text-dim)'}; filter: ${isStarter ? 'none' : 'grayscale(100%) opacity(0.5)'};">🚀</button>
+      <button class="btn btn-icon-sm btn-danger delTeamBtn" data-idx="${i}" title="Team löschen">✕</button>
     `;
     list.appendChild(card);
   });
@@ -150,24 +152,37 @@ function renderTeams() {
   // Events
   list.querySelectorAll('.teamColorPicker').forEach(el => {
     el.addEventListener('input', e => {
-      const i = +e.target.dataset.idx;
-      teams[i].color = e.target.value;
+      const i = +el.dataset.idx;
+      teams[i].color = el.value;
       saveTeams();
     });
   });
   list.querySelectorAll('.team-name-input').forEach(el => {
     el.addEventListener('change', e => {
-      const i = +e.target.dataset.idx;
-      teams[i].name = e.target.value.trim() || `Team ${i+1}`;
+      const i = +el.dataset.idx;
+      teams[i].name = el.value.trim() || `Team ${i+1}`;
       saveTeams();
     });
-    el.addEventListener('focus', e => e.target.select());
+    el.addEventListener('focus', e => el.select());
+  });
+  list.querySelectorAll('.btn-start-team').forEach(el => {
+    el.addEventListener('click', () => {
+      const i = +el.dataset.idx;
+      cfg.startingTeamId = teams[i].id;
+      S.saveConfig(cfg);
+      renderTeams();
+    });
   });
   list.querySelectorAll('.delTeamBtn').forEach(el => {
-    el.addEventListener('click', e => {
-      const i = +e.target.dataset.idx;
+    el.addEventListener('click', () => {
+      const i = +el.dataset.idx;
       if (teams.length <= 1) { showToast('Mindestens 1 Team erforderlich'); return; }
+      const deletedTeam = teams[i];
       teams.splice(i, 1);
+      if (cfg.startingTeamId === deletedTeam.id) {
+        cfg.startingTeamId = teams[0]?.id || null;
+        S.saveConfig(cfg);
+      }
       saveTeams();
       renderTeams();
     });
@@ -602,11 +617,6 @@ function attachHamburgerListeners() {
   });
 
   // Sync side-panel toggles ↔ main toggles
-  $('sp_chkSpieleiter').addEventListener('change', e => {
-    $('chkSpieleiter').checked = e.target.checked;
-    cfg.spielleiterMode = e.target.checked;
-    S.saveConfig(cfg);
-  });
   $('sp_chkNegative').addEventListener('change', e => {
     $('chkNegative').checked = e.target.checked;
     cfg.allowNegativePoints = e.target.checked;
@@ -615,7 +625,6 @@ function attachHamburgerListeners() {
 }
 
 function syncSidePanel() {
-  $('sp_chkSpieleiter').checked = cfg.spielleiterMode;
   $('sp_chkNegative').checked   = cfg.allowNegativePoints;
 }
 

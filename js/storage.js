@@ -14,7 +14,7 @@ const DEFAULT_CONFIG = {
   gameName: 'Großer Preis',
   pointSteps: [100, 200, 300, 400, 500],
   allowNegativePoints: false,
-  spielleiterMode: false,
+  startingTeamId: null,
   timerSeconds: 0,
 };
 

@@ -26,6 +26,19 @@
     </div>
   </div>
 
+  <!-- ══ AKTUELLES TEAM ══ -->
+  <div id="currentTeamBar" style="
+    display:flex; align-items:center; justify-content:center; gap:12px;
+    padding:8px 20px; flex-shrink:0;
+    border-bottom:2px solid; border-top:1px solid rgba(255,255,255,0.06);
+    font-size:15px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase;
+    transition:background 0.3s, border-color 0.3s, color 0.3s;
+  ">
+    <span style="opacity:0.6;font-size:12px;font-weight:600;">JETZT DRAN:</span>
+    <span id="currentTeamNameDisplay" style="font-size:17px;">–</span>
+    <span style="opacity:0.5;font-size:11px;font-weight:500;">▶</span>
+  </div>
+
   <!-- ══ SPIELFELD ══ -->
   <div class="board-wrap">
     <div class="game-board" id="gameBoard"></div>
@@ -37,12 +50,11 @@
 <div class="question-overlay" id="questionOverlay">
   <div style="width:min(960px,98vw);display:flex;flex-direction:column;align-items:center;gap:0;">
 
-    <!-- Kategorie + Punkte -->
     <div class="q-cat-label" id="oCatLabel"></div>
-    <div class="q-pts-big" id="oPtsBig"></div>
-    <div id="oJokerBadge" class="q-joker-badge" style="display:none;">⭐ Joker-Frage!</div>
+    <div class="q-pts-big"   id="oPtsBig"></div>
+    <div id="oJokerBadge" class="q-joker-badge" style="display:none;">⭐ Joker – Punkte direkt gutschreiben!</div>
 
-    <!-- Frage -->
+    <!-- Frage (bei Joker ausgeblendet) -->
     <div id="oQuestionBlock" style="display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;">
       <div class="q-text" id="oQuestionText"></div>
       <div class="q-media" id="oQuestionMedia"></div>
@@ -54,9 +66,6 @@
       <div class="answer-text" id="oAnswerText"></div>
       <div class="q-media" id="oAnswerMedia"></div>
     </div>
-
-    <!-- Spielleiter-Hinweis für Antwort -->
-    <div id="oSpieleiterHint" class="spielleiter-hint" style="display:none;">🔒 Spielleiter: Klicken zum Aufdecken</div>
 
     <!-- Punkte vergeben -->
     <div id="oAwardPanel" class="award-panel" style="display:none;">
@@ -89,7 +98,7 @@
   </div>
 </div>
 
-<!-- ══ SIDE-PANEL (Hamburger) ══ -->
+<!-- ══ SIDE-PANEL ══ -->
 <div class="side-overlay" id="sideOverlay"></div>
 <div class="side-panel" id="sidePanel">
   <div class="side-panel-header">
@@ -98,11 +107,27 @@
   </div>
   <div style="display:flex;flex-direction:column;gap:18px;">
 
-    <label class="toggle-wrap">
-      <div class="toggle"><input type="checkbox" id="sp_chkSpieleiter" /><span class="toggle-slider"></span></div>
-      <label for="sp_chkSpieleiter">Spielleiter-Modus</label>
-    </label>
+    <!-- Wer ist dran -->
+    <div>
+      <div class="form-label" style="margin-bottom:8px;">▶ Wer ist gerade dran?</div>
+      <div id="spTeamSelector" style="display:flex;flex-direction:column;gap:6px;"></div>
+    </div>
 
+    <div class="divider"></div>
+
+    <!-- Undo / Redo -->
+    <div>
+      <div class="form-label" style="margin-bottom:8px;">Rückgängig / Wiederholen</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" id="sp_btnUndo" style="flex:1;" title="Ctrl+Z">↩ Rückgängig</button>
+        <button class="btn" id="sp_btnRedo" style="flex:1;" title="Ctrl+Y">↪ Wiederholen</button>
+      </div>
+      <div class="text-xs text-muted mt-6">Tastatur: Ctrl+Z / Ctrl+Y</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Einstellungen -->
     <label class="toggle-wrap">
       <div class="toggle"><input type="checkbox" id="sp_chkNegative" /><span class="toggle-slider"></span></div>
       <label for="sp_chkNegative">Minuspunkte erlaubt</label>
@@ -110,7 +135,8 @@
 
     <div class="divider"></div>
 
-    <div class="section-title" style="margin-bottom:8px;">Punktestand manuell</div>
+    <!-- Punkte manuell -->
+    <div class="form-label">Punktestand manuell</div>
     <div id="spScoreList" style="display:flex;flex-direction:column;gap:8px;"></div>
 
     <div class="divider"></div>

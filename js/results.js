@@ -26,6 +26,11 @@ function init() {
     S.resetGameState();
     window.location.href = 'game.html';
   });
+
+  const btnDl = $('btnDownloadResults');
+  if (btnDl) {
+    btnDl.addEventListener('click', downloadResultsImage);
+  }
 }
 
 // ── Gewinner ──
@@ -203,6 +208,144 @@ function hexToRgba(hex, alpha) {
   const g = parseInt(hex.slice(3,5),16);
   const b = parseInt(hex.slice(5,7),16);
   return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// ── Bild-Export ──
+function downloadResultsImage() {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  
+  const w = 1200;
+  const h = 800;
+  canvas.width = w;
+  canvas.height = h;
+  
+  // 1. Hintergrund zeichnen
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, '#111322');
+  grad.addColorStop(1, '#1a1d36');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+  
+  // Deko-Kreise
+  ctx.fillStyle = 'rgba(255, 183, 3, 0.03)';
+  ctx.beginPath(); ctx.arc(w/2, h/2, 400, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = 'rgba(78, 205, 196, 0.02)';
+  ctx.beginPath(); ctx.arc(100, 100, 200, 0, Math.PI*2); ctx.fill();
+  
+  // Rahmen
+  ctx.strokeStyle = 'rgba(255, 183, 3, 0.2)';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(20, 20, w - 40, h - 40);
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(30, 30, w - 60, h - 60);
+
+  // 2. Header
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffb703';
+  ctx.font = 'bold 54px system-ui, -apple-system, sans-serif';
+  ctx.fillText(cfg.gameName || 'Großer Preis', w / 2, 90);
+  
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+  ctx.font = '600 22px system-ui, -apple-system, sans-serif';
+  ctx.fillText('🏆  OFFIZIELLES ENDERGEBNIS  🏆', w / 2, 130);
+  
+  // 3. Teams sortieren
+  const sorted = [...gs.teams].sort((a,b) => b.score - a.score);
+  const winner = sorted[0];
+  
+  // 4. Gewinner (Linke Spalte)
+  const leftX = 350;
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+  ctx.strokeStyle = winner ? hexToRgba(winner.color, 0.6) : 'rgba(255, 183, 3, 0.5)';
+  ctx.lineWidth = 3;
+  
+  const cardW = 500;
+  const cardH = 460;
+  const cardX = leftX - cardW / 2;
+  const cardY = 200;
+  
+  ctx.beginPath();
+  if (ctx.roundRect) {
+    ctx.roundRect(cardX, cardY, cardW, cardH, 20);
+  } else {
+    ctx.rect(cardX, cardY, cardW, cardH);
+  }
+  ctx.fill();
+  ctx.stroke();
+  
+  // Pokal
+  ctx.font = '100px system-ui, -apple-system, sans-serif';
+  ctx.fillText('🏆', leftX, cardY + 120);
+  
+  ctx.fillStyle = '#ffb703';
+  ctx.font = 'bold 20px system-ui, -apple-system, sans-serif';
+  ctx.fillText('1. PLATZ / SIEGER', leftX, cardY + 170);
+  
+  ctx.fillStyle = winner ? winner.color : '#fff';
+  ctx.font = 'bold 44px system-ui, -apple-system, sans-serif';
+  ctx.fillText(winner ? winner.name : 'Kein Team', leftX, cardY + 230);
+  
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 36px system-ui, -apple-system, sans-serif';
+  ctx.fillText(winner ? `${winner.score} Punkte` : '0 Punkte', leftX, cardY + 290);
+  
+  // 5. Platzierungen (Rechte Spalte)
+  const rightX = 650;
+  const listY = 200;
+  const rowW = 460;
+  const rowH = 70;
+  
+  sorted.forEach((team, idx) => {
+    if (idx >= 6) return;
+    
+    const currY = listY + idx * (rowH + 10);
+    
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    if (idx === 0) {
+      ctx.fillStyle = 'rgba(255, 183, 3, 0.08)';
+      ctx.strokeStyle = 'rgba(255, 183, 3, 0.3)';
+    }
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(rightX, currY, rowW, rowH, 10);
+    } else {
+      ctx.rect(rightX, currY, rowW, rowH);
+    }
+    ctx.fill();
+    ctx.stroke();
+    
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 24px system-ui, -apple-system, sans-serif';
+    const medals = ['🥇', '🥈', '🥉'];
+    ctx.fillText(medals[idx] || ` ${idx + 1}.`, rightX + 20, currY + rowH / 2 + 8);
+    
+    ctx.fillStyle = team.color;
+    ctx.font = 'bold 22px system-ui, -apple-system, sans-serif';
+    ctx.fillText(team.name, rightX + 80, currY + rowH / 2 + 7);
+    
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 22px system-ui, -apple-system, sans-serif';
+    ctx.fillText(`${team.score} Pkt.`, rightX + rowW - 20, currY + rowH / 2 + 7);
+  });
+  
+  // 6. Footer
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+  ctx.font = '14px system-ui, -apple-system, sans-serif';
+  const dateStr = new Date().toLocaleDateString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  ctx.fillText(`Erstellt am ${dateStr} · tobiasayen.github.io/GrosserPreis`, w / 2, h - 50);
+  
+  // 7. Download auslösen
+  const a = document.createElement('a');
+  a.download = `${(cfg.gameName || 'GrosserPreis').replace(/\s+/g, '_')}_Ergebnis.png`;
+  a.href = canvas.toDataURL('image/png');
+  a.click();
 }
 
 init();

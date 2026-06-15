@@ -31,6 +31,7 @@ function init() {
   if (btnDl) {
     btnDl.addEventListener('click', downloadResultsImage);
   }
+  checkRestoreFullscreen();
 }
 
 // ── Gewinner ──
@@ -346,6 +347,17 @@ function downloadResultsImage() {
   a.download = `${(cfg.gameName || 'GrosserPreis').replace(/\s+/g, '_')}_Ergebnis.png`;
   a.href = canvas.toDataURL('image/png');
   a.click();
+}
+
+function checkRestoreFullscreen() {
+  const pref = localStorage.getItem('gp_fullscreen_pref') === 'true';
+  if (pref && !document.fullscreenElement) {
+    const handler = () => {
+      document.documentElement.requestFullscreen().catch(() => {});
+      document.removeEventListener('click', handler);
+    };
+    document.addEventListener('click', handler);
+  }
 }
 
 init();

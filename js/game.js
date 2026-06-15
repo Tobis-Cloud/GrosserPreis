@@ -96,6 +96,7 @@ function init() {
       }
     }
   });
+  checkRestoreFullscreen();
 }
 
 // =============================================
@@ -817,21 +818,39 @@ function moveFocus(dirX, dirY) {
 // =============================================
 function toggleFullscreen() {
   if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen().catch(err => {
-      showToast('Vollbildmodus konnte nicht aktiviert werden');
-    });
+    document.documentElement.requestFullscreen()
+      .then(() => {
+        localStorage.setItem('gp_fullscreen_pref', 'true');
+      })
+      .catch(err => {
+        showToast('Vollbildmodus konnte nicht aktiviert werden');
+      });
   } else {
     document.exitFullscreen();
+    localStorage.setItem('gp_fullscreen_pref', 'false');
   }
 }
 
 document.addEventListener('fullscreenchange', () => {
+  const isFS = !!document.fullscreenElement;
+  localStorage.setItem('gp_fullscreen_pref', isFS ? 'true' : 'false');
   const btn = $('btnFullscreen');
   if (btn) {
-    btn.textContent = document.fullscreenElement ? '🗗' : '⛶';
-    btn.title = document.fullscreenElement ? 'Vollbild beenden' : 'Vollbildmodus';
+    btn.textContent = isFS ? '🗗' : '⛶';
+    btn.title = isFS ? 'Vollbild beenden' : 'Vollbildmodus';
   }
 });
+
+function checkRestoreFullscreen() {
+  const pref = localStorage.getItem('gp_fullscreen_pref') === 'true';
+  if (pref && !document.fullscreenElement) {
+    const handler = () => {
+      document.documentElement.requestFullscreen().catch(() => {});
+      document.removeEventListener('click', handler);
+    };
+    document.addEventListener('click', handler);
+  }
+}
 
 // ── START ──
 init();

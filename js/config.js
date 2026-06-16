@@ -721,8 +721,8 @@ function handleExcelFile(file) {
         }
 
         const newCats = [];
-        for (let ci = 0; ci < headerRow.length && ci < MAX_CATS; ci++) {
-          const catName = String(headerRow[ci] || '').trim() || `Kategorie ${ci+1}`;
+        for (let ci = 1; ci < headerRow.length && (ci - 1) < MAX_CATS; ci++) {
+          const catName = String(headerRow[ci] || '').trim() || `Kategorie ${ci}`;
           const questions = newSteps.map((pts, ri) => {
             const q = S.createQuestion(pts);
             q.question.text = String(questionRows[ri]?.[ci] || '').trim();

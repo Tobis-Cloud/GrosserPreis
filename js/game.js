@@ -97,8 +97,14 @@ function init() {
           else                              showAnswer();
         } else if (overlayState === 2) {
           showAwardPanel();
-        } else if (overlayState === 7 && e.key === ' ') {
-          revealListItem();
+        } else if (overlayState === 7) {
+          const q = cats[currentCatIdx]?.questions[currentQIdx];
+          const items = q?.listItems || [];
+          if (listRevealIdx < items.length) {
+            revealListItem();
+          } else {
+            showAwardPanel();
+          }
         } else if (e.key === 'Enter' && (overlayState === 3 || overlayState === 4)) {
           awardPoints();
         }
@@ -637,6 +643,21 @@ function attachOverlayListeners() {
     if (e.target.closest('#oAwardPanel'))    return;
     if (e.target.closest('#oEstimatePanel')) return;
     if (e.target.closest('#oMcTeamPanel'))   return;
+
+    // Klicks auf Buttons im ListBlock sollen natürlich deren onclick ausführen und nicht abgefangen werden
+    if (e.target.closest('button'))          return;
+
+    if (overlayState === 7) {
+      const q = cats[currentCatIdx]?.questions[currentQIdx];
+      const items = q?.listItems || [];
+      if (listRevealIdx < items.length) {
+        revealListItem();
+      } else {
+        showAwardPanel();
+      }
+      return;
+    }
+
     if (e.target.closest('#oListBlock'))     return;
 
     if (overlayState === 1) {

@@ -36,8 +36,7 @@ function createQuestion(points) {
     points,
     // Fragetyp: 'normal' | 'joker' | 'estimate' | 'multiple_choice' | 'list'
     questionType: 'normal',
-    // Rückwärtskompatibilität
-    get isJoker() { return this.questionType === 'joker'; },
+    isJoker: false,
     question: { text: '', images: [], videoUrl: '' },
     answer:   { text: '', images: [], videoUrl: '' },
     // Multiple-Choice-Optionen: Array von { text, isCorrect }

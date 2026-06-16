@@ -65,13 +65,12 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="inputPointSteps">Punkteschritte (kommagetrennt)</label>
+            <label class="form-label" for="inputPointSteps">Punkteschritte </label>
             <input type="text" id="inputPointSteps" placeholder="z.B. 100,80,60,40,20" />
-            <div class="text-xs text-muted mt-6">Die Werte werden als Zeilen auf dem Spielfeld angezeigt.</div>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="inputTimer">Timer pro Frage (Doppelklick für beliebige Zahl)</label>
+            <label class="form-label" for="inputTimer">Timer pro Frage</label>
             <select id="inputTimer" style="max-width:200px;">
               <option value="0">Kein Timer</option>
               <option value="5">5 Sekunden</option>
@@ -116,7 +115,6 @@
         <button class="btn btn-green" id="btnAddTeam">+ Team hinzufügen</button>
         <div class="text-xs text-muted mt-12">
           Das <strong style="color:var(--gold);">markierte Team</strong> (🚀) startet das Spiel.
-          Während des Spiels kann über das ☰ Menü jederzeit geändert werden, wer dran ist.
         </div>
       </div>
     </div><!-- /tab-teams -->
@@ -131,9 +129,7 @@
       </div>
 
       <div class="text-xs text-muted mb-12">
-        Klicke auf eine <strong style="color:var(--text);">Kategorie-Überschrift</strong> zum Umbenennen · Klicke auf eine <strong style="color:var(--text);">Zelle</strong> zum Bearbeiten der Frage
-        <span style="color:var(--green);">●</span> = ausgefüllt &nbsp;
-        <span style="color:var(--gold);">⭐</span> = Joker
+        Klicke auf eine <strong style="color:var(--text);">Kategorie-Überschrift</strong> zum Umbenennen oder Löschen · Klicke auf eine <strong style="color:var(--text);">Zelle</strong> zum Bearbeiten der Frage
       </div>
 
       <div class="q-grid-wrapper">
@@ -184,7 +180,7 @@
           <div style="margin-bottom:12px;">
             <div class="section-title" style="font-size:16px;margin-bottom:8px;">🖼 Übersicht herunterladen</div>
             <p class="text-xs text-dim mb-8">
-              Lade alle Fragen &amp; Antworten als Bild herunter (z.B. als Spickzettel für den Spielleiter).<br>
+              Lade alle Fragen &amp; Antworten als Bild herunter (z.B. Spickzettel für MA).<br>
               Es wird eine Übersichtskarte im PNG-Format generiert.
             </p>
           </div>
@@ -192,17 +188,6 @@
             <div class="drop-zone-icon" style="font-size:24px;margin-bottom:4px;">🖼</div>
             <div class="drop-zone-text" style="font-size:13px;font-weight:700;">Bild speichern</div>
             <div class="drop-zone-sub" style="font-size:10px;">Herunterladen (.png)</div>
-          </div>
-        </div>
-
-        <!-- Tipp -->
-        <div class="glass-sm" style="padding:12px;border-color:rgba(245,200,66,0.2);grid-column: 1 / -1;margin:0;">
-          <div style="display:flex;gap:8px;align-items:flex-start;">
-            <span style="font-size:16px;">💡</span>
-            <div class="text-xs text-dim">
-              <strong style="color:var(--gold);">Tipp: Bilder &amp; Videos:</strong>
-              Bilder kannst du direkt in die Fragen-Zellen hochladen (max. ~1MB). Videos werden als YouTube-URL verknüpft.
-            </div>
           </div>
         </div>
 
@@ -285,7 +270,7 @@
             <input type="checkbox" id="chkCustomTimer" />
             <span class="toggle-slider"></span>
           </div>
-          <span style="font-size:13px;font-weight:700;color:var(--text);">⏱️ Timer anpassen (Doppelklick für beliebige Zahl)</span>
+          <span style="font-size:13px;font-weight:700;color:var(--text);">⏱️ Timer anpassen</span>
         </label>
         
         <div id="qTimerSettingsSection" style="display:none;align-items:center;gap:8px;">
@@ -369,7 +354,7 @@
       <div id="qtab-list-section" style="display:none;">
         <div class="divider" style="margin:4px 0 12px;"></div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <div class="form-label">📋 Listenpunkte <span class="text-xs text-muted" style="text-transform:none;">(werden im Spiel einzeln aufgedeckt)</span></div>
+          <div class="form-label">📋 Listenpunkte/ Aufzählung <span class="text-xs text-muted" style="text-transform:none;"></span></div>
           <button class="btn btn-xs btn-green" id="qListAddItem">+ Punkt</button>
         </div>
         <div id="qListItems" style="display:flex;flex-direction:column;gap:8px;"></div>

@@ -219,7 +219,7 @@ function renderBoard() {
     el.className = 'game-cat-header';
     el.style.background = hexToRgba(CAT_COLORS[ci % CAT_COLORS.length], 0.85);
     el.style.color = '#fff';
-    el.style.fontSize = numCats > 5 ? 'clamp(10px,1.2vw,14px)' : 'clamp(12px,1.5vw,18px)';
+    el.style.fontSize = numCats > 5 ? 'clamp(18px,2.2vw,30px)' : 'clamp(22px,2.8vw,38px)';
     el.textContent = cat.name;
     board.appendChild(el);
   });
@@ -240,7 +240,7 @@ function renderBoard() {
       cell.style.background = hexToRgba(color, 0.3);
       cell.style.color = '#fff';
 
-      const ptSize = numCats > 6 ? 'clamp(18px,2.5vw,36px)' : 'clamp(22px,3.5vw,52px)';
+      const ptSize = numCats > 6 ? 'clamp(36px,4.5vw,60px)' : 'clamp(48px,6vw,84px)';
       cell.innerHTML = `<span style="font-size:${ptSize};">${pts}</span>`;
 
       if (!answered) {

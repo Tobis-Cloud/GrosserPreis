@@ -34,16 +34,18 @@ function createQuestion(points) {
   return {
     id: generateId('q'),
     points,
-    // Fragetyp: 'normal' | 'joker' | 'estimate' | 'multiple_choice'
+    // Fragetyp: 'normal' | 'joker' | 'estimate' | 'multiple_choice' | 'list'
     questionType: 'normal',
-    // Rückwärtskompatibilität: isJoker leitet sich vom questionType ab
+    // Rückwärtskompatibilität
     get isJoker() { return this.questionType === 'joker'; },
     question: { text: '', images: [], videoUrl: '' },
     answer:   { text: '', images: [], videoUrl: '' },
     // Multiple-Choice-Optionen: Array von { text, isCorrect }
     mcOptions: [],
-    // Schätzfrage: gespeicherte Zahl (korrekte Antwort)
+    // Schätzfrage: korrekte Zahl
     estimateTarget: null,
+    // Liste: Array von Strings (Unterpunkte)
+    listItems: [],
   };
 }
 

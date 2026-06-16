@@ -17,6 +17,8 @@ let editCatIdx = null;
 let modalImages = { question: [], answer: [] };
 // temporäre MC-Optionen im Modal
 let modalMcOptions = [];
+// temporäre Listen-Einträge im Modal
+let modalListItems = [];
 
 const CAT_COLORS = ['var(--c0)','var(--c1)','var(--c2)','var(--c3)','var(--c4)','var(--c5)','var(--c6)','var(--c7)'];
 const MAX_CATS   = 8;
@@ -368,15 +370,26 @@ function attachModalListeners() {
     syncQModalTypeSections(e.target.value);
   });
 
-  // MC-Option hinzufügen
+  // MC-Option hinzufügen (bleibt im Frage-Tab)
   $('qMcAddOption').addEventListener('click', () => {
     modalMcOptions.push({ text: '', isCorrect: false });
     renderMcOptions();
-    // Ans Antwort-Tab wechseln falls nicht schon dort
+    // Im Frage-Tab bleiben (MC ist jetzt dort)
+    document.querySelectorAll('#qModalTabs .modal-tab')[0].click();
+  });
+
+  // Listen-Punkt hinzufügen
+  $('qListAddItem').addEventListener('click', () => {
+    modalListItems.push('');
+    renderListItems();
+    // Zum Antwort-Tab wechseln (wo die Liste ist)
     document.querySelectorAll('#qModalTabs .modal-tab').forEach(t => t.classList.remove('active'));
     $('qtab-question').style.display = 'none';
     $('qtab-answer').style.display   = 'flex';
     document.querySelectorAll('#qModalTabs .modal-tab')[1].classList.add('active');
+    // Letztes Input fokussieren
+    const inputs = $('qListItems').querySelectorAll('input');
+    if (inputs.length) inputs[inputs.length - 1].focus();
   });
 
   // Bestätigungs-Modal
@@ -418,11 +431,14 @@ function openQuestionModal(ci, ri) {
   // MC-Optionen
   modalMcOptions = JSON.parse(JSON.stringify(q.mcOptions || []));
 
+  // Listen-Einträge
+  modalListItems = [...(q.listItems || [])];
+
   // Bilder rendern
   renderModalImages('question');
   renderModalImages('answer');
 
-  // MC & Schätzfrage-Bereiche
+  // Typ-abhängige Abschnitte
   syncQModalTypeSections(q.questionType);
 
   // Schätzwert
@@ -431,11 +447,18 @@ function openQuestionModal(ci, ri) {
   // MC-Optionen rendern
   renderMcOptions();
 
-  // Tab zurück auf "Frage"
-  document.querySelectorAll('#qModalTabs .modal-tab')[0].click();
+  // Listen-Einträge rendern
+  renderListItems();
+
+  // Tab zurück auf "Frage" (außer bei Joker)
+  if (q.questionType !== 'joker') {
+    document.querySelectorAll('#qModalTabs .modal-tab')[0].click();
+  }
 
   openModal('questionModal');
-  setTimeout(() => $('qTextQuestion').focus(), 100);
+  if (q.questionType !== 'joker') {
+    setTimeout(() => $('qTextQuestion').focus(), 100);
+  }
 }
 
 function renderModalImages(side) {
@@ -486,16 +509,24 @@ function saveQuestion() {
 
   const qType = $('qModalType').value;
   q.questionType          = qType;
-  // Rückwärtskompatibilität für ältere Spielstände
   q.isJoker               = (qType === 'joker');
-  q.question.text         = $('qTextQuestion').value.trim();
-  q.question.videoUrl     = $('qVideoQuestion').value.trim();
-  q.question.images       = [...modalImages.question];
-  q.answer.text           = $('qTextAnswer').value.trim();
-  q.answer.videoUrl       = $('qVideoAnswer').value.trim();
-  q.answer.images         = [...modalImages.answer];
-  q.mcOptions             = qType === 'multiple_choice' ? [...modalMcOptions] : [];
-  q.estimateTarget        = qType === 'estimate' ? (parseFloat($('qEstimateTarget').value) || null) : null;
+
+  // Frage-Inhalte nur bei Nicht-Joker speichern
+  if (qType !== 'joker') {
+    q.question.text     = $('qTextQuestion').value.trim();
+    q.question.videoUrl = $('qVideoQuestion').value.trim();
+    q.question.images   = [...modalImages.question];
+    q.answer.text       = $('qTextAnswer').value.trim();
+    q.answer.videoUrl   = $('qVideoAnswer').value.trim();
+    q.answer.images     = [...modalImages.answer];
+  } else {
+    q.question.text = q.question.videoUrl = q.answer.text = q.answer.videoUrl = '';
+    q.question.images = q.answer.images = [];
+  }
+
+  q.mcOptions      = qType === 'multiple_choice' ? [...modalMcOptions] : [];
+  q.estimateTarget = qType === 'estimate' ? (parseFloat($('qEstimateTarget').value) || null) : null;
+  q.listItems      = qType === 'list' ? [...modalListItems] : [];
 
   S.saveCategories(cats);
   renderGrid();
@@ -505,10 +536,38 @@ function saveQuestion() {
 
 // ── Fragetyp-abhängige Abschnitte im Modal ein-/ausblenden ──
 function syncQModalTypeSections(type) {
+  const isJoker    = type === 'joker';
   const isEstimate = type === 'estimate';
   const isMC       = type === 'multiple_choice';
+  const isList     = type === 'list';
+
+  // Tabs & Frage-Felder
+  $('qModalTabs').style.display       = isJoker ? 'none' : 'flex';
+  $('qJokerInfo').style.display       = isJoker ? 'block' : 'none';
+  $('qtab-question').style.display    = isJoker ? 'none' : 'flex';
+  $('qtab-answer').style.display      = 'none'; // Antwort-Tab wird per Tab-Klick angezeigt
+
+  // Standard-Antwortfelder nur bei normal/estimate/list
+  const showStdAnswer = !isJoker && !isMC;
+  if ($('qAnswerStandard')) $('qAnswerStandard').style.display = showStdAnswer ? 'block' : 'none';
+
+  // Typ-spezifische Abschnitte
   $('qtab-estimate-section').style.display = isEstimate ? 'block' : 'none';
   $('qtab-mc-section').style.display       = isMC       ? 'block' : 'none';
+  $('qtab-list-section').style.display     = isList     ? 'block' : 'none';
+
+  // Antwort-Tab-Label anpassen
+  const answerTab = document.querySelector('#qModalTabs .modal-tab[data-qtab="answer"]');
+  if (answerTab) {
+    if (isEstimate) answerTab.textContent = '🎯 Zielwert';
+    else if (isList) answerTab.textContent = '📋 Listenpunkte';
+    else answerTab.textContent = '\u2705 Antwort / L\u00f6sung';
+  }
+
+  // Bei Joker: wieder auf "erstes Tab" und gleich fertig
+  if (!isJoker) {
+    document.querySelectorAll('#qModalTabs .modal-tab')[0].click();
+  }
 }
 
 // ── MC-Optionen rendern ──
@@ -546,6 +605,35 @@ function renderMcOptions() {
     el.addEventListener('click', e => {
       modalMcOptions.splice(+e.target.dataset.mcI, 1);
       renderMcOptions();
+    });
+  });
+}
+
+// ── Listen-Einträge rendern ──
+function renderListItems() {
+  const container = $('qListItems');
+  if (!container) return;
+  container.innerHTML = '';
+  modalListItems.forEach((item, i) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;';
+    row.innerHTML = `
+      <span style="font-size:13px;font-weight:700;color:var(--text-dim);min-width:22px;text-align:center;">${i + 1}.</span>
+      <input type="text" class="listItemText" data-li="${i}" value="${esc(item)}"
+        placeholder="Listenpunkt ${i + 1}" style="flex:1;" />
+      <button class="btn btn-icon-sm btn-danger listDelItem" data-li="${i}" title="Entfernen">✕</button>
+    `;
+    container.appendChild(row);
+  });
+  container.querySelectorAll('.listItemText').forEach(el => {
+    el.addEventListener('input', e => {
+      modalListItems[+e.target.dataset.li] = e.target.value;
+    });
+  });
+  container.querySelectorAll('.listDelItem').forEach(el => {
+    el.addEventListener('click', e => {
+      modalListItems.splice(+e.target.dataset.li, 1);
+      renderListItems();
     });
   });
 }

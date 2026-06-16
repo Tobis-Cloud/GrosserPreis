@@ -9,7 +9,7 @@
   <title>Großer Preis – Spielfeld</title>
   <link rel="icon" type="image/png" href="GrosserPreis.png" />
   <link rel="apple-touch-icon" href="GrosserPreis.png" />
-  <link rel="stylesheet" href="css/style.css?v=1.4" />
+  <link rel="stylesheet" href="css/style.css?v=1.5" />
 </head>
 <body>
 <div class="game-page" id="gamePage">
@@ -61,24 +61,49 @@
       <div class="q-media" id="oQuestionMedia"></div>
     </div>
 
+    <!-- MC-Optionen während Frage (sichtbar für Zuschauer) -->
+    <div id="oMcOptionsDisplay" style="display:none;width:min(720px,96vw);margin-top:12px;"></div>
+
+    <!-- MC-Team-Auswahl: welche Gruppe hat was gewählt? -->
+    <div id="oMcTeamPanel" style="display:none;width:min(720px,96vw);">
+      <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);margin-bottom:14px;text-align:center;">Welche Gruppe hat was gewählt?</div>
+      <div id="oMcTeamInputs" style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;"></div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" id="oBtnMcEval" style="animation:none;">🔘 Auswerten</button>
+        <button class="btn btn-sm text-dim" id="oBtnMcSkip">Niemand (überspringen)</button>
+      </div>
+    </div>
+
     <!-- Antwort -->
     <div id="oAnswerBlock" class="answer-block" style="display:none;">
       <div class="answer-label">Antwort</div>
       <div class="answer-text" id="oAnswerText"></div>
       <div class="q-media" id="oAnswerMedia"></div>
-
-      <!-- Multiple-Choice Optionen (werden im Antwort-Schritt sichtbar) -->
-      <div id="oMcOptions" style="display:none;width:min(680px,96vw);margin-top:8px;"></div>
+      <!-- MC-Korrektanzeige im Antwort-Schritt -->
+      <div id="oMcResult" style="display:none;width:min(680px,96vw);margin-top:12px;"></div>
     </div>
 
-    <!-- Schätzfragen-Panel (state=1.5, zwischen Frage und Antwort) -->
+    <!-- Schätzfragen-Eingabe-Panel -->
     <div id="oEstimatePanel" style="display:none;width:min(680px,96vw);">
       <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);margin-bottom:14px;text-align:center;">Schätzungen der Gruppen eingeben</div>
       <div id="oEstimateInputs" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"></div>
-      <div id="oEstimateResult" style="display:none;background:rgba(245,200,66,0.1);border:1px solid var(--gold);border-radius:var(--radius);padding:16px;text-align:center;margin-bottom:12px;"></div>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
         <button class="btn btn-primary btn-sm" id="oBtnEstimateEval" style="animation:none;">🎯 Auswerten</button>
         <button class="btn btn-sm text-dim" id="oBtnEstimateSkip">Niemand (überspringen)</button>
+      </div>
+    </div>
+
+    <!-- Schätzfragen-Ergebnis (separater Block, bleibt sichtbar während Award-Panel) -->
+    <div id="oEstimateResult" style="display:none;width:min(680px,96vw);
+      background:rgba(245,200,66,0.08);border:1px solid var(--gold-dim);
+      border-radius:var(--radius);padding:16px;margin-bottom:8px;"></div>
+
+    <!-- Listen-Block (schrittweise aufdecken) -->
+    <div id="oListBlock" style="display:none;width:min(720px,96vw);">
+      <div id="oListItems" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;"></div>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button class="btn btn-primary btn-sm" id="oBtnListReveal" style="animation:none;">▶ Nächsten Punkt aufdecken</button>
+        <button class="btn btn-sm text-dim" id="oBtnListAll">Alle aufdecken</button>
       </div>
     </div>
 

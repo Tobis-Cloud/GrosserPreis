@@ -89,15 +89,16 @@ function init() {
       if (e.key === ' ' || e.key === 'Spacebar' || e.key === 'Enter') {
         e.preventDefault();
         if (overlayState === 1) {
-          const q = cats[currentCatIdx]?.questions[currentQIdx];
+          const q     = cats[currentCatIdx]?.questions[currentQIdx];
           const qType = q?.questionType || (q?.isJoker ? 'joker' : 'normal');
-          if (qType === 'estimate') {
-            showEstimatePanel();
-          } else {
-            showAnswer();
-          }
+          if (qType === 'estimate')         showEstimatePanel();
+          else if (qType === 'multiple_choice') showMcTeamPanel();
+          else if (qType === 'list')        showListBlock();
+          else                              showAnswer();
         } else if (overlayState === 2) {
           showAwardPanel();
+        } else if (overlayState === 7 && e.key === ' ') {
+          revealListItem();
         } else if (e.key === 'Enter' && (overlayState === 3 || overlayState === 4)) {
           awardPoints();
         }
@@ -220,59 +221,58 @@ function renderBoard() {
 // FRAGEN-OVERLAY
 // =============================================
 function openQuestion(ci, ri) {
-  currentCatIdx  = ci;
-  currentQIdx    = ri;
-  selectedTeams  = new Set();
+  currentCatIdx   = ci;
+  currentQIdx     = ri;
+  selectedTeams   = new Set();
   estimateGuesses = {};
-  currentGroupId = S.generateId('grp');
+  currentGroupId  = S.generateId('grp');
 
-  const cat = cats[ci];
-  const q   = cat.questions[ri];
-  const pts = cfg.pointSteps[ri];
-
-  // Rückwärtskompatibilität: questionType aus isJoker ableiten
+  const cat   = cats[ci];
+  const q     = cat.questions[ri];
+  const pts   = cfg.pointSteps[ri];
   const qType = q.questionType || (q.isJoker ? 'joker' : 'normal');
 
-  // ── JOKER: direkt zur Punkte-Vergabe ──
-  if (qType === 'joker') {
-    $('oCatLabel').textContent        = cat.name;
-    $('oPtsBig').textContent          = pts + ' Punkte';
-    $('oJokerBadge').style.display    = 'flex';
-    $('oQuestionBlock').style.display = 'none';
-    $('oAnswerBlock').style.display   = 'none';
-    $('oEstimatePanel').style.display = 'none';
-    $('oNegativeRow').style.display   = cfg.allowNegativePoints ? 'flex' : 'none';
-    $('oNegativeCheck').checked       = false;
-    $('oHint').style.display          = 'none';
+  // ── Alle Panels zurücksetzen ──
+  $('oJokerBadge').style.display      = 'none';
+  $('oQuestionBlock').style.display   = 'none';
+  $('oMcOptionsDisplay').style.display = 'none';
+  $('oMcTeamPanel').style.display     = 'none';
+  $('oAnswerBlock').style.display     = 'none';
+  $('oMcResult').style.display        = 'none';
+  $('oEstimatePanel').style.display   = 'none';
+  $('oEstimateResult').style.display  = 'none';
+  $('oListBlock').style.display       = 'none';
+  $('oAwardPanel').style.display      = 'none';
+  $('oHint').style.display            = 'block';
+  $('oNegativeRow').style.display     = cfg.allowNegativePoints ? 'flex' : 'none';
+  $('oNegativeCheck').checked         = false;
 
+  $('oCatLabel').textContent = cat.name;
+  $('oPtsBig').textContent   = pts + ' Punkte';
+
+  // ── JOKER ──
+  if (qType === 'joker') {
+    $('oJokerBadge').style.display = 'flex';
+    $('oHint').style.display       = 'none';
     overlayState = 4;
     $('questionOverlay').classList.add('active');
     showAwardPanel();
     return;
   }
 
-  // ── ALLE ANDEREN TYPEN (normal, estimate, multiple_choice) ──
-  $('oCatLabel').textContent        = cat.name;
-  $('oPtsBig').textContent          = pts + ' Punkte';
-  $('oJokerBadge').style.display    = 'none';
+  // ── ALLE ANDEREN ──
   $('oQuestionBlock').style.display = 'flex';
-  $('oEstimatePanel').style.display = 'none';
-
-  $('oQuestionText').textContent = q.question.text || '';
+  $('oQuestionText').textContent    = q.question.text || '';
   renderMedia($('oQuestionMedia'), q.question);
 
-  $('oAnswerBlock').style.display  = 'none';
-  $('oAnswerText').textContent     = '';
-  $('oAnswerMedia').innerHTML      = '';
-  $('oMcOptions').style.display    = 'none';
-  $('oMcOptions').innerHTML        = '';
-  $('oAwardPanel').style.display   = 'none';
-  $('oNegativeRow').style.display  = cfg.allowNegativePoints ? 'flex' : 'none';
-  $('oNegativeCheck').checked      = false;
-  $('oHint').style.display         = 'block';
-
-  if (qType === 'estimate') {
+  // MC: Optionen schon während der Frage für Zuschauer anzeigen
+  if (qType === 'multiple_choice' && q.mcOptions?.length) {
+    showMcOptionsDisplay(q.mcOptions);
+    $('oHint').textContent = 'Klicken zum Eingeben der Gruppenantworten';
+  } else if (qType === 'estimate') {
     $('oHint').textContent = 'Klicken zum Eingeben der Schätzungen';
+  } else if (qType === 'list') {
+    $('oHint').textContent = 'Klicken zum Aufdecken der Liste';
   } else {
     $('oHint').textContent = 'Klicken zum Aufdecken der Antwort';
   }
@@ -284,10 +284,217 @@ function openQuestion(ci, ri) {
 
 function closeOverlay() {
   $('questionOverlay').classList.remove('active');
-  $('oQuestionBlock').style.display = 'flex';
-  $('oEstimatePanel').style.display = 'none';
+  // Alle Panels aufräumen
+  $('oQuestionBlock').style.display    = 'flex';
+  $('oEstimatePanel').style.display    = 'none';
+  $('oEstimateResult').style.display   = 'none';
+  $('oMcOptionsDisplay').style.display = 'none';
+  $('oMcTeamPanel').style.display      = 'none';
+  $('oMcResult').style.display         = 'none';
+  $('oListBlock').style.display        = 'none';
   overlayState = 0;
   stopTimer();
+}
+
+// ── MC-Optionen für Zuschauer anzeigen (während Frage) ──
+function showMcOptionsDisplay(opts) {
+  const LETTERS = ['A','B','C','D','E','F','G','H'];
+  const panel = $('oMcOptionsDisplay');
+  panel.style.display = 'grid';
+  panel.style.gridTemplateColumns = 'repeat(auto-fill,minmax(200px,1fr))';
+  panel.style.gap = '8px';
+  panel.innerHTML = opts.map((opt, i) => `
+    <div style="
+      padding:12px 16px;border-radius:var(--radius-sm);
+      border:2px solid var(--border);
+      background:rgba(255,255,255,0.04);
+      display:flex;align-items:center;gap:10px;font-size:14px;
+    ">
+      <span style="font-size:17px;font-weight:900;color:var(--gold);min-width:20px;">${LETTERS[i] || i+1})</span>
+      <span style="font-weight:600;color:var(--text);">${esc(opt.text)}</span>
+    </div>
+  `).join('');
+}
+
+// ── MC-Team-Auswahl-Panel (welche Gruppe hat was gewählt?) ──
+let mcTeamChoices = {}; // teamId -> optionIndex
+
+function showMcTeamPanel() {
+  const q    = cats[currentCatIdx].questions[currentQIdx];
+  const opts = q.mcOptions || [];
+  if (!opts.length) { showAnswer(); return; }
+
+  overlayState = 6;
+  stopTimer();
+  $('oHint').style.display = 'none';
+  mcTeamChoices = {};
+
+  const LETTERS = ['A','B','C','D','E','F','G','H'];
+  const container = $('oMcTeamInputs');
+  container.innerHTML = '';
+
+  gs.teams.forEach(team => {
+    mcTeamChoices[team.id] = null;
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;';
+    const dot = `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${team.color};flex-shrink:0;"></span>`;
+    const nameEl = `<span style="font-size:14px;font-weight:700;color:${team.color};min-width:100px;">${esc(team.name)}</span>`;
+
+    const optBtns = opts.map((opt, i) => `
+      <button class="btn btn-xs mcTeamOptBtn" data-tid="${team.id}" data-oi="${i}"
+        style="border-color:rgba(255,255,255,0.15);font-size:13px;font-weight:700;">
+        ${LETTERS[i] || i+1}
+      </button>
+    `).join('');
+
+    row.innerHTML = `${dot}${nameEl}${optBtns}`;
+    container.appendChild(row);
+  });
+
+  // Events: Toggle-Auswahl
+  container.querySelectorAll('.mcTeamOptBtn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tid = btn.dataset.tid;
+      const oi  = +btn.dataset.oi;
+      // Alle Buttons dieser Zeile zurücksetzen
+      container.querySelectorAll(`.mcTeamOptBtn[data-tid="${tid}"]`).forEach(b => {
+        b.style.background  = 'transparent';
+        b.style.color       = 'var(--text-dim)';
+        b.style.borderColor = 'rgba(255,255,255,0.15)';
+      });
+      // Diesen auswählen
+      const team = gs.teams.find(t => t.id === tid);
+      if (mcTeamChoices[tid] === oi) {
+        mcTeamChoices[tid] = null; // deselect
+      } else {
+        mcTeamChoices[tid] = oi;
+        btn.style.background  = hexToRgba(team.color, 0.22);
+        btn.style.color       = team.color;
+        btn.style.borderColor = team.color;
+      }
+    });
+  });
+
+  $('oMcTeamPanel').style.display = 'block';
+}
+
+// ── MC auswerten: richtige Teams vorauswählen ──
+function evaluateMcAnswers() {
+  const q    = cats[currentCatIdx].questions[currentQIdx];
+  const opts = q.mcOptions || [];
+  const correctIndices = new Set(opts.map((o, i) => o.isCorrect ? i : -1).filter(i => i >= 0));
+  const LETTERS = ['A','B','C','D','E','F','G','H'];
+
+  selectedTeams = new Set();
+
+  const rows = gs.teams
+    .filter(team => mcTeamChoices[team.id] !== null && mcTeamChoices[team.id] !== undefined)
+    .map(team => {
+      const chosenIdx  = mcTeamChoices[team.id];
+      const isCorrect  = correctIndices.has(chosenIdx);
+      if (isCorrect) selectedTeams.add(team.id);
+      const chosenText = opts[chosenIdx]?.text || '?';
+      return `
+        <div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+          <span style="width:10px;height:10px;border-radius:50%;background:${team.color};display:inline-block;flex-shrink:0;"></span>
+          <span style="flex:1;font-weight:700;color:${team.color};">${esc(team.name)}</span>
+          <span style="font-size:13px;font-weight:700;">${LETTERS[chosenIdx] || chosenIdx+1}) ${esc(chosenText)}</span>
+          <span style="font-size:16px;">${isCorrect ? '\u2705' : '\u274c'}</span>
+        </div>
+      `;
+    }).join('');
+
+  const correctOpts = opts.filter(o => o.isCorrect).map(o => o.text);
+  const resultHTML  = `
+    <div style="margin-bottom:10px;">
+      <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);">Richtige Antwort${correctOpts.length > 1 ? 'en' : ''}: </span>
+      <span style="font-size:14px;font-weight:700;color:var(--green);">${correctOpts.map(t => esc(t)).join(', ')}</span>
+    </div>
+    ${rows}
+  `;
+
+  $('oMcTeamPanel').style.display = 'none';
+  // Antwortblock anzeigen
+  showAnswer();
+  // Ergebnis in MC-Result-Div
+  $('oMcResult').innerHTML = resultHTML;
+  $('oMcResult').style.display = 'block';
+}
+
+// ── Listen-Block anzeigen ──
+let listRevealIdx = 0;
+
+function showListBlock() {
+  const q     = cats[currentCatIdx].questions[currentQIdx];
+  const items = q.listItems || [];
+  if (!items.length) { showAnswer(); return; }
+
+  overlayState = 7;
+  stopTimer();
+  $('oHint').style.display = 'none';
+  listRevealIdx = 0;
+
+  const container = $('oListItems');
+  container.innerHTML = items.map((item, i) => `
+    <div class="list-item-row" data-li="${i}" style="
+      display:flex;align-items:center;gap:10px;
+      padding:10px 14px;border-radius:var(--radius-sm);
+      background:rgba(255,255,255,0.04);border:1px solid var(--border);
+      opacity:0;transition:opacity 0.35s,transform 0.35s;transform:translateY(8px);
+    ">
+      <span style="font-size:16px;font-weight:900;color:var(--gold);min-width:28px;">${i+1}.</span>
+      <span style="font-size:15px;font-weight:600;">${esc(item)}</span>
+    </div>
+  `).join('');
+
+  $('oListBlock').style.display = 'block';
+
+  // Antwort-Text anzeigen falls vorhanden
+  if (q.answer.text) {
+    $('oAnswerText').textContent = q.answer.text;
+  }
+
+  // Ersten Punkt gleich aufdecken
+  revealListItem();
+
+  // Button-Status aktualisieren
+  updateListButtons(items.length);
+}
+
+function revealListItem() {
+  const q     = cats[currentCatIdx].questions[currentQIdx];
+  const items = q.listItems || [];
+  if (listRevealIdx >= items.length) return;
+
+  const row = $('oListItems').querySelector(`[data-li="${listRevealIdx}"]`);
+  if (row) {
+    row.style.opacity   = '1';
+    row.style.transform = 'translateY(0)';
+  }
+  listRevealIdx++;
+  updateListButtons(items.length);
+}
+
+function revealAllListItems() {
+  const q     = cats[currentCatIdx].questions[currentQIdx];
+  const items = q.listItems || [];
+  $('oListItems').querySelectorAll('.list-item-row').forEach(row => {
+    row.style.opacity   = '1';
+    row.style.transform = 'translateY(0)';
+  });
+  listRevealIdx = items.length;
+  updateListButtons(items.length);
+}
+
+function updateListButtons(total) {
+  const revBtn = $('oBtnListReveal');
+  if (listRevealIdx >= total) {
+    revBtn.textContent = '\u2705 Alle aufgedeckt – Punkte vergeben?';
+    revBtn.onclick = () => showAwardPanel();
+  } else {
+    revBtn.textContent = `\u25b6 Punkt ${listRevealIdx + 1} aufdecken (${listRevealIdx}/${total})`;
+    revBtn.onclick = revealListItem;
+  }
 }
 
 // ── Schätzfragen-Panel anzeigen ──
@@ -295,7 +502,6 @@ function showEstimatePanel() {
   overlayState = 5;
   stopTimer();
   $('oHint').style.display = 'none';
-  $('oEstimateResult').style.display = 'none';
 
   // Eingabefelder für alle Teams generieren
   const inputs = $('oEstimateInputs');
@@ -316,7 +522,6 @@ function showEstimatePanel() {
     inputs.appendChild(row);
   });
 
-  // Inputs-Events
   inputs.querySelectorAll('.estInput').forEach(el => {
     el.addEventListener('input', e => {
       const val = parseFloat(e.target.value);
@@ -429,17 +634,18 @@ function showAwardPanelWithPreselect() {
 // ── State-Machine: Klick auf Overlay ──
 function attachOverlayListeners() {
   $('questionOverlay').addEventListener('click', e => {
-    if (e.target.closest('#oAwardPanel')) return;
+    if (e.target.closest('#oAwardPanel'))    return;
     if (e.target.closest('#oEstimatePanel')) return;
+    if (e.target.closest('#oMcTeamPanel'))   return;
+    if (e.target.closest('#oListBlock'))     return;
 
     if (overlayState === 1) {
-      const q = cats[currentCatIdx]?.questions[currentQIdx];
+      const q     = cats[currentCatIdx]?.questions[currentQIdx];
       const qType = q?.questionType || (q?.isJoker ? 'joker' : 'normal');
-      if (qType === 'estimate') {
-        showEstimatePanel();
-      } else {
-        showAnswer();
-      }
+      if (qType === 'estimate')             showEstimatePanel();
+      else if (qType === 'multiple_choice') showMcTeamPanel();
+      else if (qType === 'list')            showListBlock();
+      else                                  showAnswer();
     } else if (overlayState === 2) {
       showAwardPanel();
     }
@@ -451,39 +657,25 @@ function attachOverlayListeners() {
   // Schätzfragen-Buttons
   $('oBtnEstimateEval').addEventListener('click', e => { e.stopPropagation(); evaluateEstimates(); });
   $('oBtnEstimateSkip').addEventListener('click', e => { e.stopPropagation(); awardNobody(); });
+
+  // MC-Buttons
+  $('oBtnMcEval').addEventListener('click',  e => { e.stopPropagation(); evaluateMcAnswers(); });
+  $('oBtnMcSkip').addEventListener('click',  e => { e.stopPropagation(); awardNobody(); });
+
+  // Listen-Buttons
+  $('oBtnListAll').addEventListener('click', e => { e.stopPropagation(); revealAllListItems(); });
+  // oBtnListReveal wird dynamisch per updateListButtons gesetzt
 }
 
 function showAnswer() {
   const q = cats[currentCatIdx].questions[currentQIdx];
-  const qType = q.questionType || (q.isJoker ? 'joker' : 'normal');
 
   $('oAnswerBlock').style.display = 'flex';
   $('oAnswerText').textContent    = q.answer.text || '';
   renderMedia($('oAnswerMedia'), q.answer);
-  $('oHint').textContent = 'Klicken zum Vergeben der Punkte';
+  $('oHint').textContent          = 'Klicken zum Vergeben der Punkte';
+  $('oHint').style.display        = 'block';
 
-  // Multiple-Choice Optionen anzeigen
-  const mcPanel = $('oMcOptions');
-  if (qType === 'multiple_choice' && q.mcOptions?.length) {
-    mcPanel.style.display = 'grid';
-    mcPanel.style.gridTemplateColumns = 'repeat(auto-fill,minmax(180px,1fr))';
-    mcPanel.style.gap = '8px';
-    mcPanel.innerHTML = q.mcOptions.map(opt => `
-      <div style="
-        padding:12px 16px;border-radius:var(--radius-sm);
-        border:2px solid ${opt.isCorrect ? 'var(--green)' : 'var(--border)'};
-        background:${opt.isCorrect ? 'rgba(63,185,80,0.15)' : 'rgba(255,255,255,0.04)'};
-        font-size:14px;font-weight:${opt.isCorrect ? '700' : '500'};
-        color:${opt.isCorrect ? 'var(--green)' : 'var(--text-dim)'};
-        display:flex;align-items:center;gap:8px;
-      ">
-        <span>${opt.isCorrect ? '\u2705' : '\u25cb'}</span>
-        <span>${esc(opt.text)}</span>
-      </div>
-    `).join('');
-  } else {
-    mcPanel.style.display = 'none';
-  }
 
   overlayState = 2;
   stopTimer();
@@ -905,7 +1097,14 @@ function updateBonusTeamButtons() {
 function awardBonusPoints() {
   if (!bonusSelectedTeams.size) { showToast('⚠ Bitte mindestens ein Team auswählen'); return; }
 
-  const pts    = parseInt($('sp_bonusValue').value, 10);
+  const pts = parseInt($('sp_bonusValue').value, 10);
+
+  // Minuspunkte prüfen
+  if (pts < 0 && !cfg.allowNegativePoints) {
+    showToast('⛔ Strafpunkte sind deaktiviert (Minuspunkte erlaubt ausschalten)');
+    return;
+  }
+
   const isBonus = pts > 0;
   const label  = isBonus ? 'Bonuspunkt' : 'Strafpunkt';
   const grpId  = S.generateId('bonus');

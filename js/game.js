@@ -1019,6 +1019,7 @@ function startTimer(overrideSecs = null) {
     $('oTimerClock').textContent = timerLeftSeconds;
     $('oTimerClock').style.color = 'var(--gold)';
     $('oTimerClock').classList.remove('timer-clock-expired');
+    $('oTimerClock').classList.add('timer-active');
     $('oTimerClock').style.opacity = '1';
   }
   if ($('oTimerPauseBtn')) $('oTimerPauseBtn').textContent = '⏸';
@@ -1043,6 +1044,7 @@ function runTimerInterval() {
       isTimeUp = true;
       if ($('oTimerClock')) {
         $('oTimerClock').textContent = '⏰ Zeit abgelaufen!';
+        $('oTimerClock').classList.remove('timer-active');
         $('oTimerClock').classList.add('timer-clock-expired');
       }
       $('questionOverlay').classList.add('time-up');
@@ -1056,12 +1058,20 @@ function toggleTimerPause() {
   if ($('oTimerPauseBtn')) $('oTimerPauseBtn').textContent = isTimerPaused ? '▶' : '⏸';
   if ($('oTimerClock')) {
     $('oTimerClock').style.opacity = isTimerPaused ? '0.5' : '1';
+    if (isTimerPaused) {
+      $('oTimerClock').classList.remove('timer-active');
+    } else {
+      $('oTimerClock').classList.add('timer-active');
+    }
   }
 }
 
 function stopTimer() {
   clearInterval(timerInterval);
   if ($('oTimerContainer')) $('oTimerContainer').style.display = 'none';
+  if ($('oTimerClock')) {
+    $('oTimerClock').classList.remove('timer-active', 'timer-clock-expired');
+  }
   $('questionOverlay').classList.remove('time-up');
   isTimeUp = false;
 }

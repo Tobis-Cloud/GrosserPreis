@@ -949,7 +949,7 @@ input[type="color"] {
 }
 
 /* =============================================
-   TIMER-ALARM & ANIMATIONEN (Runde 5)
+   TIMER-ALARM & ANIMATIONEN (Runde 5 & 7)
    ============================================= */
 @keyframes pulse-red {
   0% { background-color: #080c18; }
@@ -961,13 +961,24 @@ input[type="color"] {
   animation: pulse-red 1s infinite;
 }
 
+@keyframes timer-beat {
+  0% { transform: scale(1); }
+  8% { transform: scale(1.12); text-shadow: 0 0 25px var(--gold-glow); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+.timer-active {
+  animation: timer-beat 1s infinite ease-out;
+}
+
 @keyframes pulse-text-red {
   0% { transform: scale(1); color: var(--red); }
-  50% { transform: scale(1.1); color: hsl(0, 100%, 70%); }
+  50% { transform: scale(1.2); color: hsl(0, 100%, 75%); text-shadow: 0 0 30px rgba(255, 0, 0, 0.9); }
   100% { transform: scale(1); color: var(--red); }
 }
 
 .timer-clock-expired {
-  animation: pulse-text-red 1s infinite;
-  text-shadow: 0 0 15px rgba(255, 0, 0, 0.6) !important;
+  animation: pulse-text-red 0.8s infinite ease-in-out;
+  text-shadow: 0 0 20px rgba(255, 0, 0, 0.7) !important;
 }

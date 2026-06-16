@@ -50,9 +50,9 @@
 <!-- ══ FRAGEN-OVERLAY ══ -->
 <div class="question-overlay" id="questionOverlay">
   <!-- Timer Uhr oben rechts -->
-  <div id="oTimerContainer" style="display:none;position:absolute;top:20px;right:20px;align-items:center;gap:10px;z-index:600;">
-    <div id="oTimerClock" style="font-size:36px;font-weight:900;color:var(--gold);min-width:60px;text-align:center;text-shadow:0 0 10px var(--gold-glow);font-variant-numeric:tabular-nums;"></div>
-    <button class="btn btn-icon btn-sm" id="oTimerPauseBtn" title="Timer pausieren/fortsetzen" style="width:36px;height:36px;border-radius:50%;font-size:16px;background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;padding:0;">⏸</button>
+  <div id="oTimerContainer" class="glass" style="display:none;position:absolute;top:20px;right:20px;align-items:center;gap:16px;z-index:600;padding:10px 20px;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+    <div id="oTimerClock" style="font-size:54px;font-weight:900;color:var(--gold);min-width:80px;text-align:center;text-shadow:0 0 15px var(--gold-glow);font-variant-numeric:tabular-nums;line-height:1;display:inline-block;transition:transform 0.1s;"></div>
+    <button class="btn btn-icon" id="oTimerPauseBtn" title="Timer pausieren/fortsetzen" style="width:40px;height:40px;border-radius:50%;font-size:18px;background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;padding:0;transition:all 0.2s;">⏸</button>
   </div>
 
   <div style="width:min(960px,98vw);display:flex;flex-direction:column;align-items:center;gap:0;">

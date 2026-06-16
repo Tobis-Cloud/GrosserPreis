@@ -690,6 +690,12 @@ function attachImportExportListeners() {
     showToast('JSON exportiert');
   });
 
+  // Excel Export
+  $('btnExportExcel').addEventListener('click', () => {
+    saveSettings(false);
+    exportExcel();
+  });
+
   // JSON Import
   $('btnImportJSON').addEventListener('click', () => $('jsonFileInput').click());
   $('jsonFileInput').addEventListener('change', e => {
@@ -771,6 +777,81 @@ function handleExcelFile(file) {
       }
     };
     reader.readAsArrayBuffer(file);
+  });
+}
+
+function exportExcel() {
+  loadSheetJS(() => {
+    try {
+      const wb = XLSX.utils.book_new();
+
+      // 1. Sheet: Fragen
+      const questionData = [];
+
+      // Kopfzeile: Spalte A (leer für Punkte), danach Kategorienamen ab Spalte B (Index 1)
+      const headerRow = ['Punkte'];
+      cats.forEach(cat => {
+        headerRow.push(cat.name);
+      });
+      questionData.push(headerRow);
+
+      // Datenzeilen: Pro Punktstufe eine Zeile
+      cfg.pointSteps.forEach((pts, ri) => {
+        const row = [`${pts} Punkte`];
+        cats.forEach(cat => {
+          const q = cat.questions[ri];
+          row.push(q ? q.question.text : '');
+        });
+        questionData.push(row);
+      });
+
+      const ws1 = XLSX.utils.aoa_to_sheet(questionData);
+      XLSX.utils.book_append_sheet(wb, ws1, "Fragen");
+
+      // 2. Sheet: Antworten
+      const answerData = [];
+
+      // Kopfzeile
+      const headerRowAns = ['Punkte'];
+      cats.forEach(cat => {
+        headerRowAns.push(cat.name);
+      });
+      answerData.push(headerRowAns);
+
+      // Datenzeilen
+      cfg.pointSteps.forEach((pts, ri) => {
+        const row = [`${pts} Punkte`];
+        cats.forEach(cat => {
+          const q = cat.questions[ri];
+          let ansText = '';
+          if (q) {
+            const qType = q.questionType || (q.isJoker ? 'joker' : 'normal');
+            if (qType === 'multiple_choice') {
+              ansText = q.mcOptions.map((opt, i) => `${String.fromCharCode(65 + i)}) ${opt.text}${opt.isCorrect ? ' [KORREKT]' : ''}`).join('\n');
+            } else if (qType === 'estimate') {
+              ansText = `Zielwert: ${q.estimateTarget || ''}`;
+            } else if (qType === 'list') {
+              ansText = q.listItems.map((item, i) => `${i + 1}. ${item}`).join('\n');
+            } else if (qType === 'joker') {
+              ansText = 'Joker-Feld';
+            } else {
+              ansText = q.answer.text || '';
+            }
+          }
+          row.push(ansText);
+        });
+        answerData.push(row);
+      });
+
+      const ws2 = XLSX.utils.aoa_to_sheet(answerData);
+      XLSX.utils.book_append_sheet(wb, ws2, "Antworten");
+
+      // Datei schreiben und herunterladen
+      XLSX.writeFile(wb, `grosserpreis_fragen_${Date.now()}.xlsx`);
+      showToast('Excel (.xlsx) exportiert');
+    } catch (err) {
+      showToast('Excel-Export-Fehler: ' + err.message);
+    }
   });
 }
 

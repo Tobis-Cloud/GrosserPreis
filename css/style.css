@@ -947,3 +947,27 @@ input[type="color"] {
   .game-title-bar { font-size: 12px; }
   .board-wrap { padding: 8px; }
 }
+
+/* =============================================
+   TIMER-ALARM & ANIMATIONEN (Runde 5)
+   ============================================= */
+@keyframes pulse-red {
+  0% { background-color: #080c18; }
+  50% { background-color: #3b0808; }
+  100% { background-color: #080c18; }
+}
+
+.question-overlay.time-up {
+  animation: pulse-red 1s infinite;
+}
+
+@keyframes pulse-text-red {
+  0% { transform: scale(1); color: var(--red); }
+  50% { transform: scale(1.1); color: hsl(0, 100%, 70%); }
+  100% { transform: scale(1); color: var(--red); }
+}
+
+.timer-clock-expired {
+  animation: pulse-text-red 1s infinite;
+  text-shadow: 0 0 15px rgba(255, 0, 0, 0.6) !important;
+}

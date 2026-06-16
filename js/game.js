@@ -27,8 +27,10 @@ let focusCatIdx = 0;
 let focusQIdx   = 0;
 let currentGroupId = null;   // für Undo-Gruppierung
 
-// ── Timer ──
 let timerInterval = null;
+let isTimerPaused = false;
+let timerLeftSeconds = 0;
+let isTimeUp = false;
 
 const CAT_COLORS = ['#e63946','#2ec4b6','#4895ef','#f9c74f','#9b5de5','#06d6a0','#f77f00','#ff85a1'];
 
@@ -54,6 +56,11 @@ function init() {
   syncSidePanel();
   updateSidePanelScores();
   updateSidePanelTeamSelector();
+
+  $('oTimerPauseBtn').addEventListener('click', e => {
+    e.stopPropagation();
+    toggleTimerPause();
+  });
 
   // Tastatur-Shortcuts: Steuerung, Leertaste, Enter & Pfeiltasten
   document.addEventListener('keydown', e => {
@@ -88,6 +95,16 @@ function init() {
       // Overlay geöffnet: Leertaste oder Enter zum Durchklicken
       if (e.key === ' ' || e.key === 'Spacebar' || e.key === 'Enter') {
         e.preventDefault();
+        if (isTimeUp) {
+          stopTimer();
+          const q = cats[currentCatIdx]?.questions[currentQIdx];
+          const qType = q?.questionType || (q?.isJoker ? 'joker' : 'normal');
+          if (qType === 'estimate')             showEstimatePanel();
+          else if (qType === 'multiple_choice') showMcTeamPanel();
+          else if (qType === 'list')            showListBlock();
+          else                                  showAnswer();
+          return;
+        }
         if (overlayState === 1) {
           const q     = cats[currentCatIdx]?.questions[currentQIdx];
           const qType = q?.questionType || (q?.isJoker ? 'joker' : 'normal');
@@ -647,6 +664,18 @@ function attachOverlayListeners() {
     // Klicks auf Buttons im ListBlock sollen natürlich deren onclick ausführen und nicht abgefangen werden
     if (e.target.closest('button'))          return;
 
+    if (isTimeUp) {
+      e.stopPropagation();
+      stopTimer();
+      const q = cats[currentCatIdx]?.questions[currentQIdx];
+      const qType = q?.questionType || (q?.isJoker ? 'joker' : 'normal');
+      if (qType === 'estimate')             showEstimatePanel();
+      else if (qType === 'multiple_choice') showMcTeamPanel();
+      else if (qType === 'list')            showListBlock();
+      else                                  showAnswer();
+      return;
+    }
+
     if (overlayState === 7) {
       const q = cats[currentCatIdx]?.questions[currentQIdx];
       const items = q?.listItems || [];
@@ -963,28 +992,65 @@ function extractYouTubeId(url) {
 function startTimer() {
   stopTimer();
   const secs = cfg.timerSeconds;
-  if (!secs) { $('timerDisplay').style.display = 'none'; return; }
+  if (!secs) {
+    if ($('oTimerContainer')) $('oTimerContainer').style.display = 'none';
+    return;
+  }
 
-  let left = secs;
-  $('timerDisplay').style.display = 'block';
-  $('timerDisplay').textContent = left;
-  $('timerDisplay').style.color = 'var(--gold)';
+  isTimerPaused = false;
+  isTimeUp = false;
+  timerLeftSeconds = secs;
 
+  if ($('oTimerContainer')) $('oTimerContainer').style.display = 'flex';
+  if ($('oTimerClock')) {
+    $('oTimerClock').textContent = timerLeftSeconds;
+    $('oTimerClock').style.color = 'var(--gold)';
+    $('oTimerClock').classList.remove('timer-clock-expired');
+    $('oTimerClock').style.opacity = '1';
+  }
+  if ($('oTimerPauseBtn')) $('oTimerPauseBtn').textContent = '⏸';
+
+  runTimerInterval();
+}
+
+function runTimerInterval() {
+  clearInterval(timerInterval);
   timerInterval = setInterval(() => {
-    left--;
-    $('timerDisplay').textContent = left;
-    if (left <= 5) $('timerDisplay').style.color = 'var(--red)';
-    if (left <= 0) {
-      stopTimer();
-      $('timerDisplay').textContent = '⏰';
-      if (overlayState === 1) showAnswer();
+    if (isTimerPaused) return;
+
+    timerLeftSeconds--;
+    if ($('oTimerClock')) $('oTimerClock').textContent = timerLeftSeconds;
+
+    if (timerLeftSeconds <= 5 && $('oTimerClock')) {
+      $('oTimerClock').style.color = 'var(--red)';
+    }
+
+    if (timerLeftSeconds <= 0) {
+      clearInterval(timerInterval);
+      isTimeUp = true;
+      if ($('oTimerClock')) {
+        $('oTimerClock').textContent = '⏰ Zeit abgelaufen!';
+        $('oTimerClock').classList.add('timer-clock-expired');
+      }
+      $('questionOverlay').classList.add('time-up');
     }
   }, 1000);
 }
 
+function toggleTimerPause() {
+  if (isTimeUp) return;
+  isTimerPaused = !isTimerPaused;
+  if ($('oTimerPauseBtn')) $('oTimerPauseBtn').textContent = isTimerPaused ? '▶' : '⏸';
+  if ($('oTimerClock')) {
+    $('oTimerClock').style.opacity = isTimerPaused ? '0.5' : '1';
+  }
+}
+
 function stopTimer() {
   clearInterval(timerInterval);
-  $('timerDisplay').style.display = 'none';
+  if ($('oTimerContainer')) $('oTimerContainer').style.display = 'none';
+  $('questionOverlay').classList.remove('time-up');
+  isTimeUp = false;
 }
 
 // =============================================

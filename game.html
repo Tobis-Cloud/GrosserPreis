@@ -49,6 +49,12 @@
 
 <!-- ══ FRAGEN-OVERLAY ══ -->
 <div class="question-overlay" id="questionOverlay">
+  <!-- Timer Uhr oben rechts -->
+  <div id="oTimerContainer" style="display:none;position:absolute;top:20px;right:20px;align-items:center;gap:10px;z-index:600;">
+    <div id="oTimerClock" style="font-size:36px;font-weight:900;color:var(--gold);min-width:60px;text-align:center;text-shadow:0 0 10px var(--gold-glow);font-variant-numeric:tabular-nums;"></div>
+    <button class="btn btn-icon btn-sm" id="oTimerPauseBtn" title="Timer pausieren/fortsetzen" style="width:36px;height:36px;border-radius:50%;font-size:16px;background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;padding:0;">⏸</button>
+  </div>
+
   <div style="width:min(960px,98vw);display:flex;flex-direction:column;align-items:center;gap:0;">
 
     <div class="q-cat-label" id="oCatLabel"></div>

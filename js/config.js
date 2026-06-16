@@ -719,6 +719,7 @@ function attachImportExportListeners() {
   $('excelFileInput').addEventListener('change', e => {
     if (e.target.files[0]) handleExcelFile(e.target.files[0]);
   });
+  $('btnLoadDemoExcel').addEventListener('click', loadDemoExcel);
 
   // Bild-Download
   $('btnDownloadImage').addEventListener('click', downloadQuestionsImage);
@@ -730,13 +731,12 @@ function attachImportExportListeners() {
   });
 }
 
-function handleExcelFile(file) {
+function handleExcelFile(fileOrBuffer) {
   // SheetJS wird dynamisch geladen
   loadSheetJS(() => {
-    const reader = new FileReader();
-    reader.onload = e => {
+    const processData = (arrayBuffer) => {
       try {
-        const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+        const wb = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
         const sheet1 = wb.Sheets[wb.SheetNames[0]];
         const sheet2 = wb.SheetNames.length > 1 ? wb.Sheets[wb.SheetNames[1]] : null;
 
@@ -840,8 +840,41 @@ function handleExcelFile(file) {
         showToast('Excel-Fehler: ' + err.message);
       }
     };
-    reader.readAsArrayBuffer(file);
+
+    if (fileOrBuffer instanceof ArrayBuffer) {
+      processData(fileOrBuffer);
+    } else {
+      const reader = new FileReader();
+      reader.onload = e => processData(e.target.result);
+      reader.readAsArrayBuffer(fileOrBuffer);
+    }
   });
+}
+
+function loadDemoExcel() {
+  const btn = $('btnLoadDemoExcel');
+  const oldText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⚡ Lädt...';
+
+  fetch('GroßerPreis_blanko.xlsx')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Datei konnte nicht geladen werden (HTTP ' + response.status + ')');
+      }
+      return response.arrayBuffer();
+    })
+    .then(buffer => {
+      handleExcelFile(buffer);
+    })
+    .catch(err => {
+      console.error(err);
+      showToast('❌ Fehler beim Laden der Vorlage: ' + err.message);
+    })
+    .finally(() => {
+      btn.disabled = false;
+      btn.textContent = oldText;
+    });
 }
 
 function exportExcel() {

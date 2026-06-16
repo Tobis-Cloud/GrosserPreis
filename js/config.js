@@ -350,6 +350,13 @@ function attachModalListeners() {
   $('closeQModal').addEventListener('click', () => closeModal('questionModal'));
   $('cancelQModal').addEventListener('click', () => closeModal('questionModal'));
 
+  // Medien-Toggle
+  $('chkAddMedia').addEventListener('change', e => {
+    const show = e.target.checked;
+    $('qMediaQuestionSection').style.display = show ? 'flex' : 'none';
+    $('qMediaAnswerSection').style.display   = show ? 'flex' : 'none';
+  });
+
   // Fragen zurücksetzen
   $('btnResetQuestions').addEventListener('click', () => confirmAction(
     'Alle Fragen zurücksetzen?',
@@ -427,6 +434,13 @@ function openQuestionModal(ci, ri) {
   $('qTextAnswer').value = q.answer.text || '';
   $('qVideoAnswer').value = q.answer.videoUrl || '';
   modalImages.answer = [...(q.answer.images || [])];
+
+  // Medien-Toggle initialisieren (Schalter aktivieren falls Bilder/Video vorhanden)
+  const hasMedia = !!((q.question.images && q.question.images.length) || q.question.videoUrl ||
+                      (q.answer.images && q.answer.images.length) || q.answer.videoUrl);
+  $('chkAddMedia').checked = hasMedia;
+  $('qMediaQuestionSection').style.display = hasMedia ? 'flex' : 'none';
+  $('qMediaAnswerSection').style.display   = hasMedia ? 'flex' : 'none';
 
   // MC-Optionen
   modalMcOptions = JSON.parse(JSON.stringify(q.mcOptions || []));
@@ -556,12 +570,18 @@ function syncQModalTypeSections(type) {
   $('qtab-mc-section').style.display       = isMC       ? 'block' : 'none';
   $('qtab-list-section').style.display     = isList     ? 'block' : 'none';
 
-  // Antwort-Tab-Label anpassen
+  // Antwort-Tab-Label anpassen & Tab für MC ausblenden
   const answerTab = document.querySelector('#qModalTabs .modal-tab[data-qtab="answer"]');
   if (answerTab) {
+    answerTab.style.display = isMC ? 'none' : 'block';
     if (isEstimate) answerTab.textContent = '🎯 Zielwert';
     else if (isList) answerTab.textContent = '📋 Listenpunkte';
     else answerTab.textContent = '\u2705 Antwort / L\u00f6sung';
+  }
+
+  // Medien-Toggle ausblenden bei Joker
+  if ($('qMediaToggleWrap')) {
+    $('qMediaToggleWrap').style.display = isJoker ? 'none' : 'flex';
   }
 
   // Bei Joker: wieder auf "erstes Tab" und gleich fertig

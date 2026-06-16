@@ -43,10 +43,10 @@
   <!-- ══ TABS ══ -->
   <div style="padding:12px 20px 0;flex-shrink:0;">
     <div class="tabs" role="tablist">
-      <button class="tab active" data-tab="import" role="tab">📁 Import / Export</button>
-      <button class="tab" data-tab="settings" role="tab">⚙️ Einstellungen</button>
+      <button class="tab active" data-tab="questions" role="tab">❓ Kategorien & Fragen</button>
       <button class="tab" data-tab="teams" role="tab">👥 Teams</button>
-      <button class="tab" data-tab="questions" role="tab">❓ Kategorien & Fragen</button>
+      <button class="tab" data-tab="settings" role="tab">⚙️ Einstellungen</button>
+      <button class="tab" data-tab="import" role="tab">📁 Import / Export</button>
     </div>
   </div>
 
@@ -104,7 +104,7 @@
     </div><!-- /tab-teams -->
 
     <!-- ─── TAB: KATEGORIEN & FRAGEN ─── -->
-    <div class="tab-pane" id="tab-questions">
+    <div class="tab-pane active" id="tab-questions">
       <div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
         <div class="section-title" style="margin-bottom:0;">Kategorien &amp; Fragen <span class="text-muted text-sm" id="catCountLabel"></span></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -124,7 +124,7 @@
     </div><!-- /tab-questions -->
 
     <!-- ─── TAB: IMPORT / EXPORT ─── -->
-    <div class="tab-pane active" id="tab-import">
+    <div class="tab-pane" id="tab-import">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;max-width:900px;">
 
         <!-- Excel -->
@@ -248,13 +248,15 @@
         <label class="form-label">Fragetext</label>
         <textarea id="qTextQuestion" placeholder="Frage eingeben…" style="min-height:90px;"></textarea>
       </div>
-      <div class="form-group">
-        <label class="form-label">Bilder (mehrere möglich)</label>
-        <div class="img-list" id="qImagesQuestion"></div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Video (YouTube-Link oder direkte URL)</label>
-        <input type="url" id="qVideoQuestion" placeholder="https://www.youtube.com/watch?v=..." />
+      <div id="qMediaQuestionSection" style="display:none;flex-direction:column;gap:14px;margin-top:14px;">
+        <div class="form-group">
+          <label class="form-label">Bilder (mehrere möglich)</label>
+          <div class="img-list" id="qImagesQuestion"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Video (YouTube-Link oder direkte URL)</label>
+          <input type="url" id="qVideoQuestion" placeholder="https://www.youtube.com/watch?v=..." />
+        </div>
       </div>
 
       <!-- MC-Optionen im Frage-Tab -->
@@ -277,13 +279,15 @@
           <label class="form-label">Antworttext</label>
           <textarea id="qTextAnswer" placeholder="Antwort eingeben…" style="min-height:90px;"></textarea>
         </div>
-        <div class="form-group">
-          <label class="form-label">Bilder (mehrere möglich)</label>
-          <div class="img-list" id="qImagesAnswer"></div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Video (YouTube-Link oder direkte URL)</label>
-          <input type="url" id="qVideoAnswer" placeholder="https://www.youtube.com/watch?v=..." />
+        <div id="qMediaAnswerSection" style="display:none;flex-direction:column;gap:14px;margin-top:14px;">
+          <div class="form-group">
+            <label class="form-label">Bilder (mehrere möglich)</label>
+            <div class="img-list" id="qImagesAnswer"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Video (YouTube-Link oder direkte URL)</label>
+            <input type="url" id="qVideoAnswer" placeholder="https://www.youtube.com/watch?v=..." />
+          </div>
         </div>
       </div>
 
@@ -308,9 +312,20 @@
       </div>
     </div>
 
-    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;border-top:1px solid var(--border);padding-top:20px;">
-      <button class="btn" id="cancelQModal">Abbrechen</button>
-      <button class="btn btn-primary" id="saveQModal" style="animation:none;">💾 Speichern</button>
+    <div style="display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:20px;border-top:1px solid var(--border);padding-top:20px;">
+      <!-- Toggle Schalter für Medien -->
+      <label class="toggle-wrap" id="qMediaToggleWrap" style="margin:0;display:flex;align-items:center;gap:8px;">
+        <div class="toggle">
+          <input type="checkbox" id="chkAddMedia" />
+          <span class="toggle-slider"></span>
+        </div>
+        <span style="font-size:13px;font-weight:700;color:var(--text);">🖼️ Medien hinzufügen</span>
+      </label>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn" id="cancelQModal">Abbrechen</button>
+        <button class="btn btn-primary" id="saveQModal" style="animation:none;">💾 Speichern</button>
+      </div>
     </div>
   </div>
 </div>

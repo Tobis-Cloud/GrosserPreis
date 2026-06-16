@@ -62,6 +62,18 @@ function init() {
     toggleTimerPause();
   });
 
+  // Live-Timer-Änderung im Sidepanel
+  if ($('sp_inputTimer')) {
+    $('sp_inputTimer').addEventListener('change', e => {
+      cfg.timerSeconds = parseInt(e.target.value, 10) || 0;
+      S.saveConfig(cfg);
+    });
+    makeTimerInputDblClickable($('sp_inputTimer'), val => {
+      cfg.timerSeconds = val;
+      S.saveConfig(cfg);
+    });
+  }
+
   // Tastatur-Shortcuts: Steuerung, Leertaste, Enter & Pfeiltasten
   document.addEventListener('keydown', e => {
     if (e.ctrlKey || e.metaKey) {
@@ -302,7 +314,8 @@ function openQuestion(ci, ri) {
 
   overlayState = 1;
   $('questionOverlay').classList.add('active');
-  startTimer();
+  const qTimer = (q.timerSeconds !== undefined && q.timerSeconds !== null) ? q.timerSeconds : cfg.timerSeconds;
+  startTimer(qTimer);
 }
 
 function closeOverlay() {
@@ -989,9 +1002,9 @@ function extractYouTubeId(url) {
 // =============================================
 // TIMER
 // =============================================
-function startTimer() {
+function startTimer(overrideSecs = null) {
   stopTimer();
-  const secs = cfg.timerSeconds;
+  const secs = (overrideSecs !== null) ? overrideSecs : cfg.timerSeconds;
   if (!secs) {
     if ($('oTimerContainer')) $('oTimerContainer').style.display = 'none';
     return;
@@ -1230,6 +1243,24 @@ function awardBonusPoints() {
 
 function syncSidePanel() {
   $('sp_chkNegative').checked = cfg.allowNegativePoints;
+  if ($('sp_inputTimer')) {
+    const val = cfg.timerSeconds;
+    let hasOption = false;
+    const select = $('sp_inputTimer');
+    for (let i = 0; i < select.options.length; i++) {
+      if (parseInt(select.options[i].value, 10) === val) {
+        hasOption = true;
+        break;
+      }
+    }
+    if (!hasOption) {
+      const customOpt = document.createElement('option');
+      customOpt.value = val;
+      customOpt.textContent = val === 0 ? 'Kein Timer' : `${val} Sekunden (Benutzerdefiniert)`;
+      select.appendChild(customOpt);
+    }
+    select.value = val;
+  }
 }
 
 function openSidePanel() {
@@ -1452,6 +1483,67 @@ function checkRestoreFullscreen() {
     document.addEventListener('click', handler, true);
     document.addEventListener('keydown', handler, true);
   }
+}
+
+function makeTimerInputDblClickable(selectEl, onSaveCallback) {
+  selectEl.addEventListener('dblclick', () => {
+    const parent = selectEl.parentElement;
+    const currentVal = parseInt(selectEl.value, 10) || 0;
+
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.min = '0';
+    input.max = '600';
+    input.value = currentVal;
+    input.style.width = selectEl.offsetWidth ? `${selectEl.offsetWidth}px` : '100px';
+    if (selectEl.style.maxWidth) input.style.maxWidth = selectEl.style.maxWidth;
+    input.style.fontSize = selectEl.style.fontSize || '13px';
+    input.style.padding = '5px 8px';
+
+    parent.replaceChild(input, selectEl);
+    input.focus();
+    input.select();
+
+    let saved = false;
+    const saveValue = () => {
+      if (saved) return;
+      saved = true;
+
+      const newVal = Math.max(0, parseInt(input.value, 10) || 0);
+
+      let hasOption = false;
+      for (let i = 0; i < selectEl.options.length; i++) {
+        if (parseInt(selectEl.options[i].value, 10) === newVal) {
+          hasOption = true;
+          selectEl.selectedIndex = i;
+          break;
+        }
+      }
+
+      if (!hasOption) {
+        const customOpt = document.createElement('option');
+        customOpt.value = newVal;
+        customOpt.textContent = newVal === 0 ? 'Kein Timer' : `${newVal} Sekunden (Benutzerdefiniert)`;
+        selectEl.appendChild(customOpt);
+        selectEl.value = newVal;
+      }
+
+      parent.replaceChild(selectEl, input);
+      if (onSaveCallback) onSaveCallback(newVal);
+    };
+
+    input.addEventListener('blur', saveValue);
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        saveValue();
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        parent.replaceChild(selectEl, input);
+      }
+    });
+  });
 }
 
 // ── START ──

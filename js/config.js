@@ -357,6 +357,18 @@ function attachModalListeners() {
     $('qMediaAnswerSection').style.display   = show ? 'flex' : 'none';
   });
 
+  // Custom Timer-Toggle im Fragen-Modal
+  $('chkCustomTimer').addEventListener('change', e => {
+    $('qTimerSettingsSection').style.display = e.target.checked ? 'flex' : 'none';
+  });
+
+  // Doppelklick-Verhalten für die Timer-Dropdowns binden
+  makeTimerInputDblClickable($('inputTimer'), val => {
+    cfg.timerSeconds = val;
+    S.saveConfig(cfg);
+  });
+  makeTimerInputDblClickable($('qTimerSeconds'));
+
   // Fragen zurücksetzen
   $('btnResetQuestions').addEventListener('click', () => confirmAction(
     'Alle Fragen zurücksetzen?',
@@ -441,6 +453,32 @@ function openQuestionModal(ci, ri) {
   $('chkAddMedia').checked = hasMedia;
   $('qMediaQuestionSection').style.display = hasMedia ? 'flex' : 'none';
   $('qMediaAnswerSection').style.display   = hasMedia ? 'flex' : 'none';
+
+  // Custom Timer-Toggle initialisieren
+  const hasCustomTimer = (q.timerSeconds !== undefined && q.timerSeconds !== null);
+  $('chkCustomTimer').checked = hasCustomTimer;
+  $('qTimerSettingsSection').style.display = hasCustomTimer ? 'flex' : 'none';
+
+  if (hasCustomTimer) {
+    const val = q.timerSeconds;
+    let hasOption = false;
+    const select = $('qTimerSeconds');
+    for (let i = 0; i < select.options.length; i++) {
+      if (parseInt(select.options[i].value, 10) === val) {
+        hasOption = true;
+        break;
+      }
+    }
+    if (!hasOption) {
+      const customOpt = document.createElement('option');
+      customOpt.value = val;
+      customOpt.textContent = val === 0 ? 'Kein Timer' : `${val}s (Benutzerdefiniert)`;
+      select.appendChild(customOpt);
+    }
+    select.value = val;
+  } else {
+    $('qTimerSeconds').value = '30';
+  }
 
   // MC-Optionen
   modalMcOptions = JSON.parse(JSON.stringify(q.mcOptions || []));
@@ -541,6 +579,7 @@ function saveQuestion() {
   q.mcOptions      = qType === 'multiple_choice' ? [...modalMcOptions] : [];
   q.estimateTarget = qType === 'estimate' ? (parseFloat($('qEstimateTarget').value) || null) : null;
   q.listItems      = qType === 'list' ? [...modalListItems] : [];
+  q.timerSeconds   = $('chkCustomTimer').checked ? (parseInt($('qTimerSeconds').value, 10) || 0) : null;
 
   S.saveCategories(cats);
   renderGrid();
@@ -582,6 +621,11 @@ function syncQModalTypeSections(type) {
   // Medien-Toggle ausblenden bei Joker
   if ($('qMediaToggleWrap')) {
     $('qMediaToggleWrap').style.display = isJoker ? 'none' : 'flex';
+  }
+
+  // Custom-Timer-Toggle ausblenden bei Joker
+  if ($('qCustomTimerContainer')) {
+    $('qCustomTimerContainer').style.display = isJoker ? 'none' : 'flex';
   }
 
   // Bei Joker: wieder auf "erstes Tab" und gleich fertig
@@ -679,44 +723,10 @@ function attachImportExportListeners() {
   // Bild-Download
   $('btnDownloadImage').addEventListener('click', downloadQuestionsImage);
 
-  // JSON Export
-  $('btnExportJSON').addEventListener('click', () => {
-    saveSettings(false);
-    const blob = new Blob([S.exportJSON()], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `grosserpreis_${Date.now()}.json`;
-    a.click();
-    showToast('JSON exportiert');
-  });
-
   // Excel Export
   $('btnExportExcel').addEventListener('click', () => {
     saveSettings(false);
     exportExcel();
-  });
-
-  // JSON Import
-  $('btnImportJSON').addEventListener('click', () => $('jsonFileInput').click());
-  $('jsonFileInput').addEventListener('change', e => {
-    const f = e.target.files[0];
-    if (!f) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      try {
-        S.importJSON(ev.target.result);
-        cfg   = S.getConfig();
-        teams = S.getTeams();
-        cats  = S.getCategories();
-        loadSettingsUI();
-        renderTeams();
-        renderGrid();
-        showToast('✓ Konfiguration importiert');
-      } catch(err) {
-        showToast('Fehler beim Importieren: ' + err.message);
-      }
-    };
-    reader.readAsText(f);
   });
 }
 
@@ -752,7 +762,61 @@ function handleExcelFile(file) {
           const questions = newSteps.map((pts, ri) => {
             const q = S.createQuestion(pts);
             q.question.text = String(questionRows[ri]?.[ci] || '').trim();
-            q.answer.text   = String(answerRows[ri]?.[ci]   || '').trim();
+            
+            const answerText = String(answerRows[ri]?.[ci] || '').trim();
+            
+            // Standardwerte setzen
+            q.questionType = 'normal';
+            q.isJoker = false;
+            q.mcOptions = [];
+            q.estimateTarget = null;
+            q.listItems = [];
+            q.answer.text = answerText;
+
+            if (answerText === 'Joker-Feld') {
+              q.questionType = 'joker';
+              q.isJoker = true;
+              q.answer.text = '';
+            } else if (answerText.startsWith('Zielwert:')) {
+              q.questionType = 'estimate';
+              const target = parseFloat(answerText.replace('Zielwert:', '').trim());
+              q.estimateTarget = isNaN(target) ? null : target;
+              q.answer.text = '';
+            } else if (/^[A-H]\)/m.test(answerText)) {
+              q.questionType = 'multiple_choice';
+              const lines = answerText.split('\n');
+              const opts = [];
+              lines.forEach(line => {
+                const match = line.match(/^[A-H]\)\s*(.*)$/);
+                if (match) {
+                  let optText = match[1].trim();
+                  let isCorrect = false;
+                  if (optText.endsWith('[KORREKT]')) {
+                    isCorrect = true;
+                    optText = optText.slice(0, -9).trim();
+                  } else if (optText.endsWith('[v]')) {
+                    isCorrect = true;
+                    optText = optText.slice(0, -3).trim();
+                  }
+                  opts.push({ text: optText, isCorrect });
+                }
+              });
+              q.mcOptions = opts;
+              q.answer.text = '';
+            } else if (/^\d+\./m.test(answerText)) {
+              q.questionType = 'list';
+              const lines = answerText.split('\n');
+              const items = [];
+              lines.forEach(line => {
+                const match = line.match(/^\d+\.\s*(.*)$/);
+                if (match) {
+                  items.push(match[1].trim());
+                }
+              });
+              q.listItems = items;
+              q.answer.text = '';
+            }
+
             return q;
           });
           newCats.push({ id: S.generateId('cat'), name: catName, questions });
@@ -1253,6 +1317,67 @@ function checkRestoreFullscreen() {
     document.addEventListener('click', handler, true);
     document.addEventListener('keydown', handler, true);
   }
+}
+
+function makeTimerInputDblClickable(selectEl, onSaveCallback) {
+  selectEl.addEventListener('dblclick', () => {
+    const parent = selectEl.parentElement;
+    const currentVal = parseInt(selectEl.value, 10) || 0;
+
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.min = '0';
+    input.max = '600';
+    input.value = currentVal;
+    input.style.width = selectEl.offsetWidth ? `${selectEl.offsetWidth}px` : '100px';
+    if (selectEl.style.maxWidth) input.style.maxWidth = selectEl.style.maxWidth;
+    input.style.fontSize = selectEl.style.fontSize || '13px';
+    input.style.padding = '5px 8px';
+
+    parent.replaceChild(input, selectEl);
+    input.focus();
+    input.select();
+
+    let saved = false;
+    const saveValue = () => {
+      if (saved) return;
+      saved = true;
+
+      const newVal = Math.max(0, parseInt(input.value, 10) || 0);
+
+      let hasOption = false;
+      for (let i = 0; i < selectEl.options.length; i++) {
+        if (parseInt(selectEl.options[i].value, 10) === newVal) {
+          hasOption = true;
+          selectEl.selectedIndex = i;
+          break;
+        }
+      }
+
+      if (!hasOption) {
+        const customOpt = document.createElement('option');
+        customOpt.value = newVal;
+        customOpt.textContent = newVal === 0 ? 'Kein Timer' : `${newVal} Sekunden (Benutzerdefiniert)`;
+        selectEl.appendChild(customOpt);
+        selectEl.value = newVal;
+      }
+
+      parent.replaceChild(selectEl, input);
+      if (onSaveCallback) onSaveCallback(newVal);
+    };
+
+    input.addEventListener('blur', saveValue);
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        saveValue();
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        parent.replaceChild(selectEl, input);
+      }
+    });
+  });
 }
 
 // ── START ──

@@ -71,8 +71,26 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="inputTimer">Timer pro Frage (Sekunden, 0 = kein Timer)</label>
-            <input type="number" id="inputTimer" min="0" max="600" placeholder="0" style="max-width:160px;" />
+            <label class="form-label" for="inputTimer">Timer pro Frage (Doppelklick für beliebige Zahl)</label>
+            <select id="inputTimer" style="max-width:200px;">
+              <option value="0">Kein Timer</option>
+              <option value="5">5 Sekunden</option>
+              <option value="10">10 Sekunden</option>
+              <option value="15">15 Sekunden</option>
+              <option value="20">20 Sekunden</option>
+              <option value="25">25 Sekunden</option>
+              <option value="30">30 Sekunden</option>
+              <option value="35">35 Sekunden</option>
+              <option value="40">40 Sekunden</option>
+              <option value="45">45 Sekunden</option>
+              <option value="50">50 Sekunden</option>
+              <option value="55">55 Sekunden</option>
+              <option value="60">60 Sekunden</option>
+              <option value="75">75 Sekunden</option>
+              <option value="90">90 Sekunden</option>
+              <option value="105">105 Sekunden</option>
+              <option value="120">120 Sekunden</option>
+            </select>
           </div>
 
           <div class="divider"></div>
@@ -125,18 +143,20 @@
 
     <!-- ─── TAB: IMPORT / EXPORT ─── -->
     <div class="tab-pane" id="tab-import">
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;max-width:900px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;max-width:960px;">
 
-        <!-- Excel -->
-        <div class="glass" style="padding:16px;">
-          <div class="section-title" style="font-size:16px;margin-bottom:8px;">📊 Excel / CSV Import</div>
-          <p class="text-xs text-dim mb-8">
-            Lade eine <strong style="color:var(--text);">.xlsx</strong>, <strong style="color:var(--text);">.xlsm</strong> oder <strong style="color:var(--text);">.csv</strong> Datei hoch.<br>
-            <strong style="color:var(--gold);">Sheet 1:</strong> Kategorien in Zeile 1, Fragen darunter (Spalte = Kat, Zeile = Pkt).<br>
-            <strong style="color:var(--gold);">Sheet 2:</strong> Selbe Struktur, aber Antworten statt Fragen.<br>
-            <a href="GroßerPreis_blanko.xlsx" download style="color:var(--gold);text-decoration:underline;display:inline-block;margin-top:6px;font-weight:700;">📄 GroßerPreis_blanko.xlsx herunterladen</a>
-          </p>
-          <div class="drop-zone" id="excelDropZone" style="padding:12px;min-height:90px;">
+        <!-- Excel Import -->
+        <div class="glass" style="padding:16px;display:flex;flex-direction:column;justify-content:space-between;">
+          <div style="margin-bottom:12px;">
+            <div class="section-title" style="font-size:16px;margin-bottom:8px;">📊 Excel / CSV Import</div>
+            <p class="text-xs text-dim mb-8">
+              Lade eine <strong style="color:var(--text);">.xlsx</strong>, <strong style="color:var(--text);">.xlsm</strong> oder <strong style="color:var(--text);">.csv</strong> Datei hoch.<br>
+              <strong style="color:var(--gold);">Sheet 1:</strong> Kategorien in Zeile 1, Fragen darunter (Spalte = Kat, Zeile = Pkt).<br>
+              <strong style="color:var(--gold);">Sheet 2:</strong> Selbe Struktur, aber Antworten statt Fragen.<br>
+              <a href="GroßerPreis_blanko.xlsx" download style="color:var(--gold);text-decoration:underline;display:inline-block;margin-top:6px;font-weight:700;">📄 GroßerPreis_blanko.xlsx herunterladen</a>
+            </p>
+          </div>
+          <div class="drop-zone" id="excelDropZone" style="padding:12px;min-height:90px;margin-top:auto;">
             <div class="drop-zone-icon" style="font-size:24px;margin-bottom:4px;">📊</div>
             <div class="drop-zone-text" style="font-size:13px;font-weight:700;">Excel / CSV ablegen</div>
             <div class="drop-zone-sub" style="font-size:10px;">oder klicken zum Auswählen</div>
@@ -145,23 +165,35 @@
           <div id="excelPreview" class="mt-8" style="display:none;"></div>
         </div>
 
-        <!-- JSON & Image Actions -->
-        <div class="glass" style="padding:16px;display:flex;flex-direction:column;gap:12px;">
-          <div>
-            <div class="section-title" style="font-size:16px;margin-bottom:4px;">💾 Konfiguration Backup</div>
-            <p class="text-xs text-dim">Sichere den aktuellen Stand als Datei oder lade ein Backup.</p>
+        <!-- Excel Export -->
+        <div class="glass" style="padding:16px;display:flex;flex-direction:column;justify-content:space-between;">
+          <div style="margin-bottom:12px;">
+            <div class="section-title" style="font-size:16px;margin-bottom:8px;">📤 Excel Export</div>
+            <p class="text-xs text-dim mb-8">
+              Exportiere deine aktuellen Fragen und Antworten direkt in eine strukturierte <strong style="color:var(--text);">.xlsx</strong> Datei.<br>
+              Diese Datei kann später wieder importiert, angepasst oder als Backup gesichert werden.
+            </p>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="btn btn-sm" id="btnExportJSON" style="flex:1;">⬇ Export (.json)</button>
-            <button class="btn btn-sm" id="btnImportJSON" style="flex:1;">⬆ Import (.json)</button>
-            <button class="btn btn-sm btn-green" id="btnExportExcel" style="width:100%;">⬇ Export (.xlsx)</button>
-            <input type="file" id="jsonFileInput" accept=".json" style="display:none;" />
+          <div class="drop-zone" id="btnExportExcel" style="padding:12px;min-height:90px;margin-top:auto;">
+            <div class="drop-zone-icon" style="font-size:24px;margin-bottom:4px;">📥</div>
+            <div class="drop-zone-text" style="font-size:13px;font-weight:700;">Excel exportieren</div>
+            <div class="drop-zone-sub" style="font-size:10px;">Herunterladen (.xlsx)</div>
           </div>
-          <div class="divider" style="margin:4px 0;"></div>
-          <div>
-            <div class="section-title" style="font-size:16px;margin-bottom:4px;">🖼 Übersicht herunterladen</div>
-            <p class="text-xs text-dim mb-8">Lade alle Fragen &amp; Antworten als Bild herunter (z.B. als Spickzettel).</p>
-            <button class="btn btn-sm" id="btnDownloadImage" style="width:100%;">⬇ Bild speichern (.png)</button>
+        </div>
+
+        <!-- Bild-Download -->
+        <div class="glass" style="padding:16px;display:flex;flex-direction:column;justify-content:space-between;">
+          <div style="margin-bottom:12px;">
+            <div class="section-title" style="font-size:16px;margin-bottom:8px;">🖼 Übersicht herunterladen</div>
+            <p class="text-xs text-dim mb-8">
+              Lade alle Fragen &amp; Antworten als Bild herunter (z.B. als Spickzettel für den Spielleiter).<br>
+              Es wird eine Übersichtskarte im PNG-Format generiert.
+            </p>
+          </div>
+          <div class="drop-zone" id="btnDownloadImage" style="padding:12px;min-height:90px;margin-top:auto;">
+            <div class="drop-zone-icon" style="font-size:24px;margin-bottom:4px;">🖼</div>
+            <div class="drop-zone-text" style="font-size:13px;font-weight:700;">Bild speichern</div>
+            <div class="drop-zone-sub" style="font-size:10px;">Herunterladen (.png)</div>
           </div>
         </div>
 
@@ -249,6 +281,39 @@
         <label class="form-label">Fragetext</label>
         <textarea id="qTextQuestion" placeholder="Frage eingeben…" style="min-height:90px;"></textarea>
       </div>
+      <div id="qCustomTimerContainer" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:4px 0;">
+        <label class="toggle-wrap" style="margin:0;display:flex;align-items:center;gap:8px;">
+          <div class="toggle">
+            <input type="checkbox" id="chkCustomTimer" />
+            <span class="toggle-slider"></span>
+          </div>
+          <span style="font-size:13px;font-weight:700;color:var(--text);">⏱️ Timer anpassen (Doppelklick für beliebige Zahl)</span>
+        </label>
+        
+        <div id="qTimerSettingsSection" style="display:none;align-items:center;gap:8px;">
+          <span style="font-size:12px;color:var(--text-dim);">Zeit:</span>
+          <select id="qTimerSeconds" style="font-size:13px;padding:4px 6px;">
+            <option value="0">Kein Timer</option>
+            <option value="5">5s</option>
+            <option value="10">10s</option>
+            <option value="15">15s</option>
+            <option value="20">20s</option>
+            <option value="25">25s</option>
+            <option value="30">30s</option>
+            <option value="35">35s</option>
+            <option value="40">40s</option>
+            <option value="45">45s</option>
+            <option value="50">50s</option>
+            <option value="55">55s</option>
+            <option value="60">60s</option>
+            <option value="75">75s</option>
+            <option value="90">90s</option>
+            <option value="105">105s</option>
+            <option value="120">120s</option>
+          </select>
+        </div>
+      </div>
+
       <div id="qMediaQuestionSection" style="display:none;flex-direction:column;gap:14px;margin-top:14px;">
         <div class="form-group">
           <label class="form-label">Bilder (mehrere möglich)</label>

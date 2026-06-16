@@ -37,6 +37,7 @@ function createQuestion(points) {
     // Fragetyp: 'normal' | 'joker' | 'estimate' | 'multiple_choice' | 'list'
     questionType: 'normal',
     isJoker: false,
+    timerSeconds: null,
     question: { text: '', images: [], videoUrl: '' },
     answer:   { text: '', images: [], videoUrl: '' },
     // Multiple-Choice-Optionen: Array von { text, isCorrect }
@@ -117,20 +118,5 @@ window.GPStorage = {
   },
   resetGameState() {
     localStorage.removeItem(GP_KEYS.GAME_STATE);
-  },
-
-  // --- EXPORT / IMPORT ---
-  exportJSON() {
-    return JSON.stringify({
-      config: this.getConfig(),
-      teams: this.getTeams(),
-      categories: this.getCategories(),
-    }, null, 2);
-  },
-  importJSON(jsonString) {
-    const data = JSON.parse(jsonString);
-    if (data.config)     this.saveConfig(data.config);
-    if (data.teams)      this.saveTeams(data.teams);
-    if (data.categories) this.saveCategories(data.categories);
   },
 };

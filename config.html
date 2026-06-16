@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1, minimum-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0a0e1a" />
+  <title>Großer Preis – Konfiguration</title>
+  <meta name="description" content="Konfiguriere dein Großer-Preis-Quizspiel: Teams, Kategorien, Fragen und Import." />
+  <link rel="icon" type="image/png" href="GrosserPreis.png" />
+  <link rel="apple-touch-icon" href="GrosserPreis.png" />
+  <link rel="stylesheet" href="css/style.css?v=1.5" />
+  <!-- FOUC-Schutz -->
+  <script>
+    try {
+      const cfg = JSON.parse(localStorage.getItem('gp_config') || '{}');
+    } catch(e) {}
+  </script>
+</head>
+<body>
+<div id="app" style="height:100dvh;display:flex;flex-direction:column;overflow:hidden;">
+
+  <!-- ══ HEADER ══ -->
+  <header style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.4);backdrop-filter:blur(20px);flex-shrink:0;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span style="font-size:28px;">🏆</span>
+      <div>
+        <div style="font-size:20px;font-weight:900;color:var(--gold);letter-spacing:0.04em;" id="headerTitle">Großer Preis</div>
+        <div style="font-size:11px;color:var(--text-muted);font-weight:600;">Konfiguration</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <a href="index.html" class="btn btn-sm" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.12);text-decoration:none;color:#fff;">🏠 Startseite</a>
+      <button class="btn btn-danger btn-sm" id="btnResetAll" title="Alles zurücksetzen">🗑 Reset</button>
+      <button class="btn btn-primary btn-start" id="btnStart">▶ SPIEL STARTEN</button>
+      <button class="btn btn-icon btn-sm" id="btnFullscreen" title="Vollbildmodus" style="width:36px;height:36px;font-size:18px;background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;margin-right:4px;">⛶</button>
+      <button class="hamburger" id="hamburgerBtn" title="Einstellungen" aria-label="Einstellungen öffnen">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ══ TABS ══ -->
+  <div style="padding:12px 20px 0;flex-shrink:0;">
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="questions" role="tab">❓ Kategorien & Fragen</button>
+      <button class="tab" data-tab="teams" role="tab">👥 Teams</button>
+      <button class="tab" data-tab="settings" role="tab">⚙️ Einstellungen</button>
+      <button class="tab" data-tab="import" role="tab">📁 Import / Export</button>
+    </div>
+  </div>
+
+  <!-- ══ TAB-INHALTE ══ -->
+  <div style="flex:1;overflow-y:auto;padding:16px 20px 24px;">
+
+    <!-- ─── TAB: EINSTELLUNGEN ─── -->
+    <div class="tab-pane" id="tab-settings">
+      <div class="glass" style="padding:24px;max-width:680px;">
+        <div class="section-title">Spieleinstellungen</div>
+        <div style="display:flex;flex-direction:column;gap:18px;">
+
+          <div class="form-group">
+            <label class="form-label" for="inputGameName">Spielname</label>
+            <input type="text" id="inputGameName" placeholder="z.B. Firmen-Quiz 2025" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="inputPointSteps">Punkteschritte </label>
+            <input type="text" id="inputPointSteps" placeholder="z.B. 100,80,60,40,20" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="inputTimer">Timer pro Frage</label>
+            <select id="inputTimer" style="max-width:200px;">
+              <option value="0">Kein Timer</option>
+              <option value="5">5 Sekunden</option>
+              <option value="10">10 Sekunden</option>
+              <option value="15">15 Sekunden</option>
+              <option value="20">20 Sekunden</option>
+              <option value="25">25 Sekunden</option>
+              <option value="30">30 Sekunden</option>
+              <option value="35">35 Sekunden</option>
+              <option value="40">40 Sekunden</option>
+              <option value="45">45 Sekunden</option>
+              <option value="50">50 Sekunden</option>
+              <option value="55">55 Sekunden</option>
+              <option value="60">60 Sekunden</option>
+              <option value="75">75 Sekunden</option>
+              <option value="90">90 Sekunden</option>
+              <option value="105">105 Sekunden</option>
+              <option value="120">120 Sekunden</option>
+            </select>
+          </div>
+
+          <div class="divider"></div>
+
+          <label class="toggle-wrap">
+            <div class="toggle"><input type="checkbox" id="chkNegative" /><span class="toggle-slider"></span></div>
+            <label for="chkNegative">Minuspunkte erlaubt (bei falscher Antwort)</label>
+          </label>
+
+          <div class="mt-8">
+            <button class="btn btn-primary" id="btnSaveSettings" style="animation:none;">💾 Einstellungen speichern</button>
+            <span id="saveSettingsHint" class="text-xs text-green mt-8" style="display:none;margin-left:10px;">✓ Gespeichert</span>
+          </div>
+        </div>
+      </div>
+    </div><!-- /tab-settings -->
+
+    <!-- ─── TAB: TEAMS ─── -->
+    <div class="tab-pane" id="tab-teams">
+      <div class="glass" style="padding:24px;max-width:680px;">
+        <div class="section-title">Teams konfigurieren</div>
+        <div id="teamList" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"></div>
+        <button class="btn btn-green" id="btnAddTeam">+ Team hinzufügen</button>
+        <div class="text-xs text-muted mt-12">
+          Das <strong style="color:var(--gold);">markierte Team</strong> (🚀) startet das Spiel.
+        </div>
+      </div>
+    </div><!-- /tab-teams -->
+
+    <!-- ─── TAB: KATEGORIEN & FRAGEN ─── -->
+    <div class="tab-pane active" id="tab-questions">
+      <div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div class="section-title" style="margin-bottom:0;">Kategorien &amp; Fragen <span class="text-muted text-sm" id="catCountLabel"></span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-sm" id="btnResetQuestions">🗑 Fragen zurücksetzen</button>
+        </div>
+      </div>
+
+      <div class="text-xs text-muted mb-12">
+        Klicke auf eine <strong style="color:var(--text);">Kategorie-Überschrift</strong> zum Umbenennen oder Löschen · Klicke auf eine <strong style="color:var(--text);">Zelle</strong> zum Bearbeiten der Frage
+      </div>
+
+      <div class="q-grid-wrapper">
+        <div class="q-grid" id="questionGrid"></div>
+      </div>
+    </div><!-- /tab-questions -->
+
+    <!-- ─── TAB: IMPORT / EXPORT ─── -->
+    <div class="tab-pane" id="tab-import">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;max-width:960px;">
+
+        <!-- Excel Import -->
+        <div class="glass" style="padding:16px;display:flex;flex-direction:column;justify-content:space-between;">
+          <div style="margin-bottom:12px;">
+            <div class="section-title" style="font-size:16px;margin-bottom:8px;">📊 Excel Import</div>
+            <p class="text-xs text-dim mb-8">
+              Excel-Muster Download:<br>
+              <a href="GroßerPreis_blanko.xlsx" download style="color:var(--gold);text-decoration:underline;display:inline-block;margin-top:6px;font-weight:700;">📄 GroßerPreis_blanko.xlsx herunterladen</a>
+            </p>
+          </div>
+          <div class="drop-zone" id="excelDropZone" style="padding:12px;min-height:90px;margin-top:auto;">
+            <div class="drop-zone-icon" style="font-size:24px;margin-bottom:4px;">📊</div>
+            <div class="drop-zone-text" style="font-size:13px;font-weight:700;">Excel ablegen</div>
+            <div class="drop-zone-sub" style="font-size:10px;">oder klicken zum Auswählen</div>
+            <input type="file" id="excelFileInput" accept=".xlsx,.xlsm,.xls,.csv" style="display:none;" />
+          </div>
+          <div id="excelPreview" class="mt-8" style="display:none;"></div>
+        </div>
+
+        <!-- Excel Export -->
+        <div class="glass" style="padding:16px;display:flex;flex-direction:column;justify-content:space-between;">
+          <div style="margin-bottom:12px;">
+            <div class="section-title" style="font-size:16px;margin-bottom:8px;">📤 Excel Export</div>
+            <p class="text-xs text-dim mb-8">
+              Exportiere deine aktuellen Fragen und Antworten direkt in eine strukturierte <strong style="color:var(--text);">.xlsx</strong> Datei.<br>
+              Diese Datei kann später wieder importiert, angepasst oder als Backup gesichert werden.
+            </p>
+          </div>
+          <div class="drop-zone" id="btnExportExcel" style="padding:12px;min-height:90px;margin-top:auto;">
+            <div class="drop-zone-icon" style="font-size:24px;margin-bottom:4px;">📥</div>
+            <div class="drop-zone-text" style="font-size:13px;font-weight:700;">Excel exportieren</div>
+            <div class="drop-zone-sub" style="font-size:10px;">Herunterladen (.xlsx)</div>
+          </div>
+        </div>
+
+        <!-- Bild-Download -->
+        <div class="glass" style="padding:16px;display:flex;flex-direction:column;justify-content:space-between;">
+          <div style="margin-bottom:12px;">
+            <div class="section-title" style="font-size:16px;margin-bottom:8px;">🖼 Übersicht herunterladen</div>
+            <p class="text-xs text-dim mb-8">
+              Lade alle Fragen &amp; Antworten als Bild herunter (z.B. Spickzettel für MA).<br>
+              Es wird eine Übersichtskarte im PNG-Format generiert.
+            </p>
+          </div>
+          <div class="drop-zone" id="btnDownloadImage" style="padding:12px;min-height:90px;margin-top:auto;">
+            <div class="drop-zone-icon" style="font-size:24px;margin-bottom:4px;">🖼</div>
+            <div class="drop-zone-text" style="font-size:13px;font-weight:700;">Bild speichern</div>
+            <div class="drop-zone-sub" style="font-size:10px;">Herunterladen (.png)</div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /tab-import -->
+
+  </div><!-- /tab content area -->
+</div><!-- /app -->
+
+<!-- ══ SIDE-PANEL (Hamburger-Menü) ══ -->
+<div class="side-overlay" id="sideOverlay"></div>
+<div class="side-panel" id="sidePanel">
+  <div class="side-panel-header">
+    <span class="side-panel-title">⚙️ Schnell-Einstellungen</span>
+    <button class="btn btn-icon btn-sm" id="closeSidePanel" title="Schließen">✕</button>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:18px;">
+    <div class="form-group">
+      <label class="form-label">Minuspunkte</label>
+      <label class="toggle-wrap">
+        <div class="toggle"><input type="checkbox" id="sp_chkNegative" /><span class="toggle-slider"></span></div>
+        <label for="sp_chkNegative">Erlaubt</label>
+      </label>
+    </div>
+    <div class="divider"></div>
+    <button class="btn btn-primary btn-start" id="sp_btnStart" style="width:100%;animation:none;">▶ SPIEL STARTEN</button>
+    <button class="btn btn-danger" id="sp_btnReset" style="width:100%;">🗑 Alles zurücksetzen</button>
+  </div>
+</div>
+
+<!-- ══ MODAL: FRAGE BEARBEITEN ══ -->
+<div class="modal-overlay" id="questionModal" role="dialog" aria-modal="true" aria-labelledby="qModalTitle">
+  <div class="modal" style="width:min(760px,96vw);">
+    <div class="modal-header">
+      <span class="modal-title" id="qModalTitle">Frage bearbeiten</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <!-- Fragetyp-Auswahl -->
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label style="font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.09em;white-space:nowrap;">Typ:</label>
+          <select id="qModalType" style="width:auto;font-size:13px;padding:5px 8px;">
+            <option value="normal">❓ Normal</option>
+            <option value="joker">⭐ Joker</option>
+            <option value="multiple_choice">🔘 Multiple Choice</option>
+            <option value="estimate">🎯 Schätzfrage</option>
+            <option value="list">📋 Liste</option>
+          </select>
+        </div>
+        <button class="btn btn-icon btn-sm" id="closeQModal" title="Schließen">✕</button>
+      </div>
+    </div>
+
+    <!-- Joker-Info (keine Tabs nötig) -->
+    <div id="qJokerInfo" style="display:none;
+      background:rgba(245,200,66,0.08);border:1px solid var(--gold-dim);
+      border-radius:var(--radius);padding:20px;text-align:center;margin-bottom:16px;">
+      <div style="font-size:32px;margin-bottom:10px;">⭐</div>
+      <div style="font-size:16px;font-weight:700;color:var(--gold);margin-bottom:6px;">Joker-Feld</div>
+      <div style="font-size:13px;color:var(--text-dim);line-height:1.5;">
+        Bei einem Joker wird <strong style="color:var(--text);">keine Frage und keine Antwort</strong> angezeigt.<br>
+        Stattdessen können Punkte direkt an eine oder mehrere Gruppen vergeben werden.
+      </div>
+    </div>
+
+    <!-- Tabs (nicht bei Joker) -->
+    <div class="modal-tabs" id="qModalTabs">
+      <button class="modal-tab active" data-qtab="question">❓ Frage</button>
+      <button class="modal-tab" data-qtab="answer" id="qTabAnswerBtn">✅ Antwort / Lösung</button>
+    </div>
+
+    <!-- ── FRAGE-TAB ── -->
+    <div id="qtab-question" style="display:flex;flex-direction:column;gap:14px;">
+      <div class="form-group">
+        <label class="form-label">Fragetext</label>
+        <textarea id="qTextQuestion" placeholder="Frage eingeben…" style="min-height:90px;"></textarea>
+      </div>
+      <div id="qCustomTimerContainer" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:4px 0;">
+        <label class="toggle-wrap" style="margin:0;display:flex;align-items:center;gap:8px;">
+          <div class="toggle">
+            <input type="checkbox" id="chkCustomTimer" />
+            <span class="toggle-slider"></span>
+          </div>
+          <span style="font-size:13px;font-weight:700;color:var(--text);">⏱️ Timer anpassen</span>
+        </label>
+        
+        <div id="qTimerSettingsSection" style="display:none;align-items:center;gap:8px;">
+          <span style="font-size:12px;color:var(--text-dim);">Zeit:</span>
+          <select id="qTimerSeconds" style="font-size:13px;padding:4px 6px;">
+            <option value="0">Kein Timer</option>
+            <option value="5">5s</option>
+            <option value="10">10s</option>
+            <option value="15">15s</option>
+            <option value="20">20s</option>
+            <option value="25">25s</option>
+            <option value="30">30s</option>
+            <option value="35">35s</option>
+            <option value="40">40s</option>
+            <option value="45">45s</option>
+            <option value="50">50s</option>
+            <option value="55">55s</option>
+            <option value="60">60s</option>
+            <option value="75">75s</option>
+            <option value="90">90s</option>
+            <option value="105">105s</option>
+            <option value="120">120s</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="qMediaQuestionSection" style="display:none;flex-direction:column;gap:14px;margin-top:14px;">
+        <div class="form-group">
+          <label class="form-label">Bilder (mehrere möglich)</label>
+          <div class="img-list" id="qImagesQuestion"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Video (YouTube-Link oder direkte URL)</label>
+          <input type="url" id="qVideoQuestion" placeholder="https://www.youtube.com/watch?v=..." />
+        </div>
+      </div>
+
+      <!-- MC-Optionen im Frage-Tab -->
+      <div id="qtab-mc-section" style="display:none;">
+        <div class="divider" style="margin:8px 0;"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div class="form-label">🔘 Antwortoptionen <span class="text-xs text-muted" style="text-transform:none;">(✓ = korrekte Antwort)</span></div>
+          <button class="btn btn-xs btn-green" id="qMcAddOption">+ Option</button>
+        </div>
+        <div id="qMcOptions" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+    </div>
+
+    <!-- ── ANTWORT-TAB ── -->
+    <div id="qtab-answer" style="display:none;flex-direction:column;gap:14px;">
+
+      <!-- Normal / Standard Antwort -->
+      <div id="qAnswerStandard">
+        <div class="form-group">
+          <label class="form-label">Antworttext</label>
+          <textarea id="qTextAnswer" placeholder="Antwort eingeben…" style="min-height:90px;"></textarea>
+        </div>
+        <div id="qMediaAnswerSection" style="display:none;flex-direction:column;gap:14px;margin-top:14px;">
+          <div class="form-group">
+            <label class="form-label">Bilder (mehrere möglich)</label>
+            <div class="img-list" id="qImagesAnswer"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Video (YouTube-Link oder direkte URL)</label>
+            <input type="url" id="qVideoAnswer" placeholder="https://www.youtube.com/watch?v=..." />
+          </div>
+        </div>
+      </div>
+
+      <!-- Schätzfrage: Zielwert -->
+      <div id="qtab-estimate-section" style="display:none;">
+        <div class="divider" style="margin:4px 0 12px;"></div>
+        <div class="form-group">
+          <label class="form-label">🎯 Korrekter Schätzwert (Zahl)</label>
+          <input type="number" id="qEstimateTarget" placeholder="z.B. 1969 (Mondlandung)" style="max-width:220px;" />
+          <div class="text-xs text-muted mt-6">Die Gruppe mit der nächsten Schätzung gewinnt die Punkte automatisch.</div>
+        </div>
+      </div>
+
+      <!-- Liste: Unterpunkte -->
+      <div id="qtab-list-section" style="display:none;">
+        <div class="divider" style="margin:4px 0 12px;"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div class="form-label">📋 Listenpunkte/ Aufzählung <span class="text-xs text-muted" style="text-transform:none;"></span></div>
+          <button class="btn btn-xs btn-green" id="qListAddItem">+ Punkt</button>
+        </div>
+        <div id="qListItems" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:20px;border-top:1px solid var(--border);padding-top:20px;">
+      <!-- Toggle Schalter für Medien -->
+      <label class="toggle-wrap" id="qMediaToggleWrap" style="margin:0;display:flex;align-items:center;gap:8px;">
+        <div class="toggle">
+          <input type="checkbox" id="chkAddMedia" />
+          <span class="toggle-slider"></span>
+        </div>
+        <span style="font-size:13px;font-weight:700;color:var(--text);">🖼️ Medien hinzufügen</span>
+      </label>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn" id="cancelQModal">Abbrechen</button>
+        <button class="btn btn-primary" id="saveQModal" style="animation:none;">💾 Speichern</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: KATEGORIENNAME BEARBEITEN ══ -->
+<div class="modal-overlay" id="catNameModal" role="dialog" aria-modal="true">
+  <div class="modal" style="width:min(440px,96vw);">
+    <div class="modal-header">
+      <span class="modal-title">Kategorie bearbeiten</span>
+      <button class="btn btn-icon btn-sm" id="closeCatModal">✕</button>
+    </div>
+    <div class="form-group mb-16">
+      <label class="form-label">Kategoriename</label>
+      <input type="text" id="catNameInput" placeholder="z.B. Sport, Kultur, Natur…" />
+    </div>
+    <div style="display:flex;gap:10px;justify-content:space-between;">
+      <button class="btn btn-danger btn-sm" id="deleteCatBtn">🗑 Kategorie löschen</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" id="cancelCatModal">Abbrechen</button>
+        <button class="btn btn-primary" id="saveCatModal" style="animation:none;">💾 Speichern</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BESTÄTIGUNGS-MODAL (Reset) ══ -->
+<div class="modal-overlay" id="confirmModal" role="dialog" aria-modal="true">
+  <div class="modal" style="width:min(420px,96vw);">
+    <div class="modal-header">
+      <span class="modal-title" id="confirmTitle">Bist du sicher?</span>
+    </div>
+    <p class="text-dim mb-20" id="confirmText"></p>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn" id="confirmCancel">Abbrechen</button>
+      <button class="btn btn-danger" id="confirmOk">Ja, löschen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOAST ══ -->
+<div id="toast" style="
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);
+  background:#1e2a3a;border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:10px 20px;font-size:14px;font-weight:600;
+  opacity:0;transition:all 0.3s;pointer-events:none;z-index:2000;
+  white-space:nowrap;
+"></div>
+
+<script src="js/storage.js"></script>
+<script src="js/config.js"></script>
+</body>
+</html>

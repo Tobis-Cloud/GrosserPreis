@@ -10,7 +10,7 @@
   <meta name="description" content="Konfiguriere dein Großer-Preis-Quizspiel: Teams, Kategorien, Fragen und Import." />
   <link rel="icon" type="image/png" href="GrosserPreis.png" />
   <link rel="apple-touch-icon" href="GrosserPreis.png" />
-  <link rel="stylesheet" href="css/style.css?v=1.3" />
+  <link rel="stylesheet" href="css/style.css?v=1.4" />
   <!-- FOUC-Schutz -->
   <script>
     try {
@@ -208,10 +208,16 @@
     <div class="modal-header">
       <span class="modal-title" id="qModalTitle">Frage bearbeiten</span>
       <div style="display:flex;gap:8px;align-items:center;">
-        <label class="toggle-wrap" style="margin:0;" title="Als Joker-Feld markieren">
-          <div class="toggle"><input type="checkbox" id="qModalJoker" /><span class="toggle-slider"></span></div>
-          <span style="font-size:13px;color:var(--text-dim);">⭐ Joker</span>
-        </label>
+        <!-- Fragetyp-Auswahl -->
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label style="font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.09em;white-space:nowrap;">Typ:</label>
+          <select id="qModalType" style="width:auto;font-size:13px;padding:5px 8px;">
+            <option value="normal">❓ Normal</option>
+            <option value="joker">⭐ Joker</option>
+            <option value="multiple_choice">🔘 Multiple Choice</option>
+            <option value="estimate">🎯 Schätzfrage</option>
+          </select>
+        </div>
         <button class="btn btn-icon btn-sm" id="closeQModal" title="Schließen">✕</button>
       </div>
     </div>
@@ -250,6 +256,24 @@
       <div class="form-group">
         <label class="form-label">Video (YouTube-Link oder direkte URL)</label>
         <input type="url" id="qVideoAnswer" placeholder="https://www.youtube.com/watch?v=..." />
+      </div>
+
+      <!-- Schätzfrage: Zielwert -->
+      <div id="qtab-estimate-section" style="display:none;">
+        <div class="divider" style="margin:8px 0;"></div>
+        <div class="form-group">
+          <label class="form-label">🎯 Korrekter Schätzwert (Zahl)</label>
+          <input type="number" id="qEstimateTarget" placeholder="z.B. 1969 (Mondlandung)" style="max-width:220px;" />
+          <div class="text-xs text-muted mt-6">Der Spieler/die Gruppe, deren Schätzung am nächsten liegt, gewinnt die Punkte.</div>
+        </div>
+      </div>
+
+      <!-- Multiple-Choice: Optionen im Antwort-Tab -->
+      <div id="qtab-mc-section" style="display:none;">
+        <div class="divider" style="margin:8px 0;"></div>
+        <div class="form-label" style="margin-bottom:8px;">🔘 Antwortoptionen (mindestens eine als korrekt markieren)</div>
+        <div id="qMcOptions" style="display:flex;flex-direction:column;gap:8px;"></div>
+        <button class="btn btn-sm btn-green" id="qMcAddOption" style="margin-top:8px;width:100%;">+ Option hinzufügen</button>
       </div>
     </div>
 

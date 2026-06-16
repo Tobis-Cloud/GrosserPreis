@@ -9,7 +9,7 @@
   <title>Großer Preis – Spielfeld</title>
   <link rel="icon" type="image/png" href="GrosserPreis.png" />
   <link rel="apple-touch-icon" href="GrosserPreis.png" />
-  <link rel="stylesheet" href="css/style.css?v=1.3" />
+  <link rel="stylesheet" href="css/style.css?v=1.4" />
 </head>
 <body>
 <div class="game-page" id="gamePage">
@@ -66,6 +66,20 @@
       <div class="answer-label">Antwort</div>
       <div class="answer-text" id="oAnswerText"></div>
       <div class="q-media" id="oAnswerMedia"></div>
+
+      <!-- Multiple-Choice Optionen (werden im Antwort-Schritt sichtbar) -->
+      <div id="oMcOptions" style="display:none;width:min(680px,96vw);margin-top:8px;"></div>
+    </div>
+
+    <!-- Schätzfragen-Panel (state=1.5, zwischen Frage und Antwort) -->
+    <div id="oEstimatePanel" style="display:none;width:min(680px,96vw);">
+      <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);margin-bottom:14px;text-align:center;">Schätzungen der Gruppen eingeben</div>
+      <div id="oEstimateInputs" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"></div>
+      <div id="oEstimateResult" style="display:none;background:rgba(245,200,66,0.1);border:1px solid var(--gold);border-radius:var(--radius);padding:16px;text-align:center;margin-bottom:12px;"></div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" id="oBtnEstimateEval" style="animation:none;">🎯 Auswerten</button>
+        <button class="btn btn-sm text-dim" id="oBtnEstimateSkip">Niemand (überspringen)</button>
+      </div>
     </div>
 
     <!-- Punkte vergeben -->
@@ -133,6 +147,50 @@
       <div class="toggle"><input type="checkbox" id="sp_chkNegative" /><span class="toggle-slider"></span></div>
       <label for="sp_chkNegative">Minuspunkte erlaubt</label>
     </label>
+
+    <div class="divider"></div>
+
+    <!-- 🎁 Bonus- / Strafpunkte -->
+    <div>
+      <div class="form-label" style="margin-bottom:10px;">🎁 Bonus- / Strafpunkte vergeben</div>
+
+      <!-- Punktwert-Auswahl -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <select id="sp_bonusValue" style="flex:1;font-size:15px;font-weight:700;text-align:center;">
+          <option value="-100">− 100</option>
+          <option value="-90">− 90</option>
+          <option value="-80">− 80</option>
+          <option value="-70">− 70</option>
+          <option value="-60">− 60</option>
+          <option value="-50">− 50</option>
+          <option value="-40">− 40</option>
+          <option value="-30">− 30</option>
+          <option value="-20">− 20</option>
+          <option value="-10">− 10</option>
+          <option value="10">+ 10</option>
+          <option value="20">+ 20</option>
+          <option value="30">+ 30</option>
+          <option value="40">+ 40</option>
+          <option value="50" selected>+ 50</option>
+          <option value="60">+ 60</option>
+          <option value="70">+ 70</option>
+          <option value="80">+ 80</option>
+          <option value="90">+ 90</option>
+          <option value="100">+ 100</option>
+        </select>
+        <span class="text-xs text-muted">Punkte</span>
+      </div>
+
+      <!-- Team-Auswahl-Buttons -->
+      <div id="sp_bonusTeamBtns" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div>
+
+      <!-- Vergeben-Button -->
+      <button class="btn btn-primary" id="sp_btnBonus"
+        style="width:100%;animation:none;font-size:14px;">✓ Vergeben</button>
+      <div class="text-xs text-muted mt-6" style="text-align:center;">
+        Positive Werte = Bonuspunkt · Negative = Strafpunkt
+      </div>
+    </div>
 
     <div class="divider"></div>
 

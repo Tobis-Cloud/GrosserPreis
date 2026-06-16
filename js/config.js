@@ -15,6 +15,8 @@ let editCtx = { catIdx: null, qIdx: null };
 let editCatIdx = null;
 // temporäre Bilder im Modal
 let modalImages = { question: [], answer: [] };
+// temporäre MC-Optionen im Modal
+let modalMcOptions = [];
 
 const CAT_COLORS = ['var(--c0)','var(--c1)','var(--c2)','var(--c3)','var(--c4)','var(--c5)','var(--c6)','var(--c7)'];
 const MAX_CATS   = 8;
@@ -264,12 +266,16 @@ function renderGrid() {
                             q.answer.text   || q.answer.images.length   || q.answer.videoUrl);
       const cell = makeEl('div', '', 'q-grid-cell');
       if (hasContent) cell.classList.add('has-content');
-      if (q.isJoker)  cell.classList.add('is-joker');
+      const qType = q.questionType || (q.isJoker ? 'joker' : 'normal');
+      if (qType === 'joker')            cell.classList.add('is-joker');
+      if (qType === 'estimate')         cell.classList.add('is-estimate');
+      if (qType === 'multiple_choice')  cell.classList.add('is-mc');
 
+      const typeIcon = { joker: '⭐', estimate: '🎯', multiple_choice: '🔘' }[qType] || '';
       cell.innerHTML = `
         <div class="q-cell-icons">
           ${hasContent ? '<span style="color:var(--green);">●</span>' : ''}
-          ${q.isJoker  ? '<span>⭐</span>' : ''}
+          ${typeIcon ? `<span>${typeIcon}</span>` : ''}
         </div>
         <div style="font-size:18px;font-weight:900;color:var(--gold);">${pts}</div>
         <div class="q-cell-preview">${esc(q.question.text || (hasContent ? '📷/🎥' : ''))}</div>
@@ -357,6 +363,22 @@ function attachModalListeners() {
     }
   ));
 
+  // Fragetyp-Auswahl → Bereiche live umschalten
+  $('qModalType').addEventListener('change', e => {
+    syncQModalTypeSections(e.target.value);
+  });
+
+  // MC-Option hinzufügen
+  $('qMcAddOption').addEventListener('click', () => {
+    modalMcOptions.push({ text: '', isCorrect: false });
+    renderMcOptions();
+    // Ans Antwort-Tab wechseln falls nicht schon dort
+    document.querySelectorAll('#qModalTabs .modal-tab').forEach(t => t.classList.remove('active'));
+    $('qtab-question').style.display = 'none';
+    $('qtab-answer').style.display   = 'flex';
+    document.querySelectorAll('#qModalTabs .modal-tab')[1].classList.add('active');
+  });
+
   // Bestätigungs-Modal
   $('confirmCancel').addEventListener('click', () => closeModal('confirmModal'));
 
@@ -375,8 +397,13 @@ function openQuestionModal(ci, ri) {
   const q   = cat.questions[ri];
   const pts = cfg.pointSteps[ri];
 
+  // Rückwärtskompatibilität: isJoker → questionType migrieren
+  if (!q.questionType) {
+    q.questionType = q.isJoker ? 'joker' : 'normal';
+  }
+
   $('qModalTitle').textContent = `${esc(cat.name)} – ${pts} Punkte`;
-  $('qModalJoker').checked = q.isJoker;
+  $('qModalType').value = q.questionType;
 
   // Frage-Felder
   $('qTextQuestion').value = q.question.text || '';
@@ -388,9 +415,21 @@ function openQuestionModal(ci, ri) {
   $('qVideoAnswer').value = q.answer.videoUrl || '';
   modalImages.answer = [...(q.answer.images || [])];
 
+  // MC-Optionen
+  modalMcOptions = JSON.parse(JSON.stringify(q.mcOptions || []));
+
   // Bilder rendern
   renderModalImages('question');
   renderModalImages('answer');
+
+  // MC & Schätzfrage-Bereiche
+  syncQModalTypeSections(q.questionType);
+
+  // Schätzwert
+  $('qEstimateTarget').value = q.estimateTarget != null ? q.estimateTarget : '';
+
+  // MC-Optionen rendern
+  renderMcOptions();
 
   // Tab zurück auf "Frage"
   document.querySelectorAll('#qModalTabs .modal-tab')[0].click();
@@ -445,18 +484,70 @@ function saveQuestion() {
   const { catIdx, qIdx } = editCtx;
   const q = cats[catIdx].questions[qIdx];
 
-  q.isJoker           = $('qModalJoker').checked;
-  q.question.text     = $('qTextQuestion').value.trim();
-  q.question.videoUrl = $('qVideoQuestion').value.trim();
-  q.question.images   = [...modalImages.question];
-  q.answer.text       = $('qTextAnswer').value.trim();
-  q.answer.videoUrl   = $('qVideoAnswer').value.trim();
-  q.answer.images     = [...modalImages.answer];
+  const qType = $('qModalType').value;
+  q.questionType          = qType;
+  // Rückwärtskompatibilität für ältere Spielstände
+  q.isJoker               = (qType === 'joker');
+  q.question.text         = $('qTextQuestion').value.trim();
+  q.question.videoUrl     = $('qVideoQuestion').value.trim();
+  q.question.images       = [...modalImages.question];
+  q.answer.text           = $('qTextAnswer').value.trim();
+  q.answer.videoUrl       = $('qVideoAnswer').value.trim();
+  q.answer.images         = [...modalImages.answer];
+  q.mcOptions             = qType === 'multiple_choice' ? [...modalMcOptions] : [];
+  q.estimateTarget        = qType === 'estimate' ? (parseFloat($('qEstimateTarget').value) || null) : null;
 
   S.saveCategories(cats);
   renderGrid();
   closeModal('questionModal');
   showToast('Frage gespeichert');
+}
+
+// ── Fragetyp-abhängige Abschnitte im Modal ein-/ausblenden ──
+function syncQModalTypeSections(type) {
+  const isEstimate = type === 'estimate';
+  const isMC       = type === 'multiple_choice';
+  $('qtab-estimate-section').style.display = isEstimate ? 'block' : 'none';
+  $('qtab-mc-section').style.display       = isMC       ? 'block' : 'none';
+}
+
+// ── MC-Optionen rendern ──
+function renderMcOptions() {
+  const container = $('qMcOptions');
+  container.innerHTML = '';
+  modalMcOptions.forEach((opt, i) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;';
+    row.innerHTML = `
+      <label class="toggle-wrap" style="margin:0;flex-shrink:0;" title="Als korrekt markieren">
+        <div class="toggle" style="width:36px;height:20px;">
+          <input type="checkbox" ${opt.isCorrect ? 'checked' : ''} data-mc-i="${i}" class="mcCorrectChk" />
+          <span class="toggle-slider"></span>
+        </div>
+      </label>
+      <input type="text" class="mcOptionText" data-mc-i="${i}" value="${esc(opt.text)}"
+        placeholder="Antwortoption ${i + 1}" style="flex:1;" />
+      <button class="btn btn-icon-sm btn-danger mcDelOpt" data-mc-i="${i}" title="Löschen">✕</button>
+    `;
+    container.appendChild(row);
+  });
+  // Events binden
+  container.querySelectorAll('.mcOptionText').forEach(el => {
+    el.addEventListener('input', e => {
+      modalMcOptions[+e.target.dataset.mcI].text = e.target.value;
+    });
+  });
+  container.querySelectorAll('.mcCorrectChk').forEach(el => {
+    el.addEventListener('change', e => {
+      modalMcOptions[+e.target.dataset.mcI].isCorrect = e.target.checked;
+    });
+  });
+  container.querySelectorAll('.mcDelOpt').forEach(el => {
+    el.addEventListener('click', e => {
+      modalMcOptions.splice(+e.target.dataset.mcI, 1);
+      renderMcOptions();
+    });
+  });
 }
 
 // =============================================

@@ -409,7 +409,9 @@ input[type="color"] {
 }
 .q-grid-cell:hover { background: var(--bg-card-h); border-color: var(--border-h); transform: scale(1.03); }
 .q-grid-cell.has-content { border-color: rgba(63,185,80,0.45); }
-.q-grid-cell.is-joker { border-color: var(--gold); box-shadow: 0 0 10px var(--gold-glow); }
+.q-grid-cell.is-joker    { border-color: var(--gold);  box-shadow: 0 0 10px var(--gold-glow); }
+.q-grid-cell.is-estimate { border-color: #4895ef;       box-shadow: 0 0 8px rgba(72,149,239,0.25); }
+.q-grid-cell.is-mc       { border-color: #9b5de5;       box-shadow: 0 0 8px rgba(155,93,229,0.25); }
 .q-cell-icons { position: absolute; top: 4px; right: 5px; display: flex; gap: 3px; font-size: 10px; }
 .q-cell-preview { font-size: 10px; color: var(--text-dim); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .add-cat-btn {

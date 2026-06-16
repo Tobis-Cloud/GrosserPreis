@@ -951,34 +951,41 @@ input[type="color"] {
 /* =============================================
    TIMER-ALARM & ANIMATIONEN (Runde 5 & 7)
    ============================================= */
-@keyframes pulse-red {
-  0% { background-color: #080c18; }
-  50% { background-color: #3b0808; }
-  100% { background-color: #080c18; }
+@keyframes alarm-strobe {
+  0% { background-color: #080c18; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); }
+  50% { background-color: #570000; box-shadow: inset 0 0 200px rgba(255,0,0,0.9); }
+  100% { background-color: #080c18; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); }
 }
 
 .question-overlay.time-up {
-  animation: pulse-red 1s infinite;
+  animation: alarm-strobe 0.5s infinite ease-in-out;
 }
 
 @keyframes timer-beat {
-  0% { transform: scale(1); }
-  8% { transform: scale(1.12); text-shadow: 0 0 25px var(--gold-glow); }
-  50% { transform: scale(1.02); }
+  0% { transform: scale(1.3) rotate(-3deg); text-shadow: 0 0 30px var(--gold-glow); }
+  15% { transform: scale(1) rotate(0deg); }
   100% { transform: scale(1); }
 }
 
 .timer-active {
-  animation: timer-beat 1s infinite ease-out;
+  animation: timer-beat 1s infinite cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-@keyframes pulse-text-red {
-  0% { transform: scale(1); color: var(--red); }
-  50% { transform: scale(1.2); color: hsl(0, 100%, 75%); text-shadow: 0 0 30px rgba(255, 0, 0, 0.9); }
-  100% { transform: scale(1); color: var(--red); }
+@keyframes shake-and-pulse {
+  0% { transform: scale(1) translate(0, 0) rotate(0deg); color: var(--red); }
+  10% { transform: scale(1.25) translate(-4px, 2px) rotate(-2deg); color: #ff3838; text-shadow: 0 0 45px rgba(255,0,0,1); }
+  20% { transform: scale(1.25) translate(4px, -2px) rotate(2deg); }
+  30% { transform: scale(1.25) translate(-4px, -2px) rotate(-1deg); }
+  40% { transform: scale(1.25) translate(4px, 2px) rotate(1deg); }
+  50% { transform: scale(1.25) translate(-2px, 2px) rotate(0deg); color: #ff7675; }
+  60% { transform: scale(1.25) translate(2px, -2px) rotate(-2deg); }
+  70% { transform: scale(1.25) translate(-2px, -1px) rotate(1deg); }
+  80% { transform: scale(1.25) translate(2px, 1px) rotate(0deg); }
+  90% { transform: scale(1.25) translate(-2px, -2px) rotate(-1deg); }
+  100% { transform: scale(1) translate(0, 0) rotate(0deg); color: var(--red); }
 }
 
 .timer-clock-expired {
-  animation: pulse-text-red 0.8s infinite ease-in-out;
-  text-shadow: 0 0 20px rgba(255, 0, 0, 0.7) !important;
+  animation: shake-and-pulse 0.4s infinite linear;
+  text-shadow: 0 0 35px rgba(255, 0, 0, 0.8) !important;
 }

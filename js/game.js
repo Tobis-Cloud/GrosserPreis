@@ -536,7 +536,6 @@ function updateListButtons(total) {
 // ── Schätzfragen-Panel anzeigen ──
 function showEstimatePanel() {
   overlayState = 5;
-  stopTimer();
   $('oHint').style.display = 'none';
 
   // Eingabefelder für alle Teams generieren
@@ -570,6 +569,7 @@ function showEstimatePanel() {
 
 // ── Schätzfragen auswerten ──
 function evaluateEstimates() {
+  stopTimer();
   const q      = cats[currentCatIdx].questions[currentQIdx];
   const target = q.estimateTarget;
 

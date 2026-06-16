@@ -30,6 +30,7 @@ let currentGroupId = null;   // für Undo-Gruppierung
 let timerInterval = null;
 let isTimerPaused = false;
 let timerLeftSeconds = 0;
+let timerInitialSeconds = 0;
 let isTimeUp = false;
 
 const CAT_COLORS = ['#e63946','#2ec4b6','#4895ef','#f9c74f','#9b5de5','#06d6a0','#f77f00','#ff85a1'];
@@ -60,6 +61,11 @@ function init() {
   $('oTimerPauseBtn').addEventListener('click', e => {
     e.stopPropagation();
     toggleTimerPause();
+  });
+
+  $('oTimerResetBtn').addEventListener('click', e => {
+    e.stopPropagation();
+    startTimer(timerInitialSeconds);
   });
 
   // Live-Timer-Änderung im Sidepanel
@@ -1013,6 +1019,7 @@ function startTimer(overrideSecs = null) {
   isTimerPaused = false;
   isTimeUp = false;
   timerLeftSeconds = secs;
+  timerInitialSeconds = secs;
 
   if ($('oTimerContainer')) $('oTimerContainer').style.display = 'flex';
   if ($('oTimerClock')) {
@@ -1023,6 +1030,7 @@ function startTimer(overrideSecs = null) {
     $('oTimerClock').style.opacity = '1';
   }
   if ($('oTimerPauseBtn')) $('oTimerPauseBtn').textContent = '⏸';
+  $('questionOverlay').classList.remove('time-up');
 
   runTimerInterval();
 }

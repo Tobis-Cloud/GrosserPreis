@@ -50,9 +50,12 @@
 <!-- ══ FRAGEN-OVERLAY ══ -->
 <div class="question-overlay" id="questionOverlay">
   <!-- Timer Uhr oben rechts -->
-  <div id="oTimerContainer" class="glass" style="display:none;position:absolute;top:20px;right:20px;align-items:center;gap:20px;z-index:600;padding:15px 30px;border-radius:24px;box-shadow:0 12px 40px rgba(0,0,0,0.5);border:2px solid rgba(255,255,255,0.15);">
-    <div id="oTimerClock" style="font-size:80px;font-weight:900;color:var(--gold);min-width:110px;text-align:center;text-shadow:0 0 20px var(--gold-glow);font-variant-numeric:tabular-nums;line-height:1;display:inline-block;transition:all 0.15s;"></div>
-    <button class="btn btn-icon" id="oTimerPauseBtn" title="Timer pausieren/fortsetzen" style="width:50px;height:50px;border-radius:50%;font-size:22px;background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;padding:0;transition:all 0.2s;">⏸</button>
+  <div id="oTimerContainer" class="glass" style="display:none;position:absolute;top:20px;right:20px;align-items:center;gap:24px;z-index:600;padding:15px 30px;border-radius:32px;box-shadow:0 16px 48px rgba(0,0,0,0.6);border:2px solid rgba(255,255,255,0.25);">
+    <div id="oTimerClock" style="font-size:180px;font-weight:900;color:var(--gold);min-width:240px;text-align:center;text-shadow:0 0 35px var(--gold-glow);font-variant-numeric:tabular-nums;line-height:1;display:inline-block;transition:all 0.15s;"></div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <button class="btn btn-icon" id="oTimerPauseBtn" title="Timer pausieren/fortsetzen" style="width:64px;height:64px;border-radius:50%;font-size:28px;background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;padding:0;transition:all 0.2s;">⏸</button>
+      <button class="btn btn-icon" id="oTimerResetBtn" title="Timer zurücksetzen" style="width:64px;height:64px;border-radius:50%;font-size:28px;background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;padding:0;transition:all 0.2s;">🔄</button>
+    </div>
   </div>
 
   <div style="width:min(960px,98vw);display:flex;flex-direction:column;align-items:center;gap:0;">

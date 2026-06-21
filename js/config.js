@@ -1095,20 +1095,65 @@ function downloadQuestionsImage() {
   const PAD      = 44;
   const CAT_H    = 52;
   const COL_H    = 28; // Header-Zeile
-  const ROW_H    = 76;
   const TITLE_H  = 70;
   const GAP      = 16;
   const PTS_W    = 76;
 
   const CAT_COLORS_HEX = ['#e63946','#2ec4b6','#4895ef','#f9c74f','#9b5de5','#06d6a0','#f77f00','#ff85a1'];
 
-  // Gesamthöhe berechnen
+  const contentW = IMG_W - PAD * 2;
+  const qW = (contentW - PTS_W) * 0.52;
+  const aW = (contentW - PTS_W) - qW;
+
+  // 1. Layout & Höhenberechnung vorab durchführen (da Zeilenhöhen dynamisch sind)
+  const layout = [];
   let totalH = PAD + TITLE_H;
-  cats.forEach(() => {
-    totalH += CAT_H + COL_H + cfg.pointSteps.length * ROW_H + GAP;
+
+  const dummyCanvas = document.createElement('canvas');
+  const dctx = dummyCanvas.getContext('2d');
+
+  cats.forEach((cat, ci) => {
+    const catLayout = {
+      cat,
+      ci,
+      yStart: totalH,
+      headerHeight: CAT_H + COL_H,
+      rows: []
+    };
+    
+    totalH += CAT_H + COL_H;
+
+    cfg.pointSteps.forEach((pts, ri) => {
+      const q = cat.questions[ri];
+      
+      dctx.font = '13px system-ui, Arial, sans-serif';
+      const qLines = q ? getQuestionLines(dctx, q, qW - 20) : ['–'];
+      
+      dctx.font = '13px system-ui, Arial, sans-serif';
+      const aLines = q ? getAnswerLines(dctx, q, aW - 20) : ['–'];
+      
+      const maxLines = Math.max(qLines.length, aLines.length);
+      const rowHeight = Math.max(76, 24 + maxLines * 18 + 12); // padding + lines * 18 + bottom padding
+      
+      catLayout.rows.push({
+        pts,
+        q,
+        qLines,
+        aLines,
+        height: rowHeight,
+        yStart: totalH
+      });
+      
+      totalH += rowHeight;
+    });
+
+    totalH += GAP;
+    layout.push(catLayout);
   });
+  
   totalH += PAD;
 
+  // 2. Canvas erzeugen
   const canvas = document.createElement('canvas');
   canvas.width  = IMG_W;
   canvas.height = totalH;
@@ -1117,7 +1162,7 @@ function downloadQuestionsImage() {
   // ── Hintergrund ──
   ctx.fillStyle = '#0d1117';
   ctx.fillRect(0, 0, IMG_W, totalH);
-  // subtiler Verlauf
+  
   const bg = ctx.createRadialGradient(IMG_W/2, 0, 0, IMG_W/2, totalH*0.4, IMG_W*0.8);
   bg.addColorStop(0, 'rgba(88,40,200,0.10)');
   bg.addColorStop(1, 'transparent');
@@ -1133,19 +1178,17 @@ function downloadQuestionsImage() {
   ctx.font = '15px system-ui, Arial, sans-serif';
   ctx.fillText('Fragen & Antworten – Spielleiter-Übersicht', IMG_W / 2, PAD + 58);
 
-  let curY = PAD + TITLE_H;
-  const contentW = IMG_W - PAD * 2;
-  const qW = (contentW - PTS_W) * 0.52;
-  const aW = (contentW - PTS_W) - qW;
-
-  cats.forEach((cat, ci) => {
-    const color = CAT_COLORS_HEX[ci % CAT_COLORS_HEX.length];
+  // 3. Zeichnen der Kategorien und Fragen
+  layout.forEach(catLayout => {
+    const cat = catLayout.cat;
+    const color = CAT_COLORS_HEX[catLayout.ci % CAT_COLORS_HEX.length];
+    let curY = catLayout.yStart;
 
     // Kategorie-Header
     gpRoundRect(ctx, PAD, curY, contentW, CAT_H, 10);
     ctx.fillStyle = color;
     ctx.fill();
-    // leichter Glanz
+    
     const shine = ctx.createLinearGradient(PAD, curY, PAD, curY + CAT_H);
     shine.addColorStop(0, 'rgba(255,255,255,0.12)');
     shine.addColorStop(1, 'rgba(255,255,255,0)');
@@ -1170,29 +1213,31 @@ function downloadQuestionsImage() {
     ctx.fillText('ANTWORT', PAD + PTS_W + qW + 10, curY + 18);
     curY += COL_H;
 
-    // Fragen-Zeilen
-    cfg.pointSteps.forEach((pts, ri) => {
-      const q       = cat.questions[ri];
-      const isEven  = ri % 2 === 0;
+    // Fragen-Zeilen zeichnen
+    catLayout.rows.forEach((rowLayout, ri) => {
+      const q = rowLayout.q;
+      const pts = rowLayout.pts;
+      const rowH = rowLayout.height;
+      const isEven = ri % 2 === 0;
 
       // Zeilenhintergrund
       ctx.fillStyle = q?.isJoker
         ? 'rgba(245,200,66,0.07)'
         : (isEven ? 'rgba(255,255,255,0.025)' : 'rgba(255,255,255,0.05)');
-      ctx.fillRect(PAD, curY, contentW, ROW_H);
+      ctx.fillRect(PAD, curY, contentW, rowH);
 
       // Joker-Rand
       if (q?.isJoker) {
         ctx.strokeStyle = 'rgba(245,200,66,0.45)';
         ctx.lineWidth = 1;
-        ctx.strokeRect(PAD, curY, contentW, ROW_H);
+        ctx.strokeRect(PAD, curY, contentW, rowH);
       }
 
       // Punkte
       ctx.fillStyle = '#f5c842';
       ctx.font = 'bold 24px system-ui, Arial, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(pts, PAD + PTS_W / 2, curY + 36);
+      ctx.fillText(pts, PAD + PTS_W / 2, curY + 38);
       if (q?.isJoker) {
         ctx.fillStyle = 'rgba(245,200,66,0.7)';
         ctx.font = '10px system-ui, Arial, sans-serif';
@@ -1204,55 +1249,68 @@ function downloadQuestionsImage() {
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(PAD + PTS_W, curY + 8);
-      ctx.lineTo(PAD + PTS_W, curY + ROW_H - 8);
+      ctx.lineTo(PAD + PTS_W, curY + rowH - 8);
       ctx.stroke();
 
-      // Frage
+      // Frage zeichnen
       ctx.fillStyle = '#e8eaf6';
       ctx.font = '13px system-ui, Arial, sans-serif';
       ctx.textAlign = 'left';
-      const qText = q?.question.text || '';
-      const qExtra = [];
-      if (q?.question.images?.length) qExtra.push(`📷 ${q.question.images.length}x Bild`);
-      if (q?.question.videoUrl) qExtra.push('🎥 Video');
-      gpWrapText(ctx, qText || (qExtra.length ? '' : '–'), PAD + PTS_W + 10, curY + 22, qW - 20, 17, 2);
-      if (qExtra.length) {
-        ctx.fillStyle = 'rgba(232,234,246,0.4)';
-        ctx.font = '11px system-ui, Arial, sans-serif';
-        ctx.fillText(qExtra.join('  '), PAD + PTS_W + 10, curY + ROW_H - 14);
-      }
+      
+      let textY = curY + 24;
+      rowLayout.qLines.forEach((lineText, idx) => {
+        if (idx === rowLayout.qLines.length - 1 && lineText.startsWith('  ')) {
+          ctx.fillStyle = 'rgba(232,234,246,0.4)';
+          ctx.font = '11px system-ui, Arial, sans-serif';
+          ctx.fillText(lineText.trim(), PAD + PTS_W + 10, textY + 4);
+        } else {
+          ctx.fillStyle = '#e8eaf6';
+          ctx.font = '13px system-ui, Arial, sans-serif';
+          ctx.fillText(lineText, PAD + PTS_W + 10, textY);
+          textY += 18;
+        }
+      });
 
       // Trenn-Linie Frage/Antwort
       ctx.strokeStyle = 'rgba(255,255,255,0.07)';
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(PAD + PTS_W + qW, curY + 8);
-      ctx.lineTo(PAD + PTS_W + qW, curY + ROW_H - 8);
+      ctx.lineTo(PAD + PTS_W + qW, curY + rowH - 8);
       ctx.stroke();
 
-      // Antwort
-      ctx.fillStyle = '#f5c842';
-      ctx.font = 'bold 13px system-ui, Arial, sans-serif';
-      const aText = q?.answer.text || '';
-      const aExtra = [];
-      if (q?.answer.images?.length) aExtra.push(`📷 ${q.answer.images.length}x Bild`);
-      if (q?.answer.videoUrl) aExtra.push('🎥 Video');
-      gpWrapText(ctx, aText || (aExtra.length ? '' : '–'), PAD + PTS_W + qW + 10, curY + 22, aW - 20, 17, 2);
-      if (aExtra.length) {
-        ctx.fillStyle = 'rgba(245,200,66,0.5)';
-        ctx.font = '11px system-ui, Arial, sans-serif';
-        ctx.fillText(aExtra.join('  '), PAD + PTS_W + qW + 10, curY + ROW_H - 14);
-      }
+      // Antwort zeichnen
+      textY = curY + 24;
+      rowLayout.aLines.forEach((lineText, idx) => {
+        if (idx === rowLayout.aLines.length - 1 && lineText.startsWith('  ')) {
+          ctx.fillStyle = 'rgba(245,200,66,0.5)';
+          ctx.font = '11px system-ui, Arial, sans-serif';
+          ctx.fillText(lineText.trim(), PAD + PTS_W + qW + 10, textY + 4);
+        } else {
+          if (lineText.includes('[✓]') || lineText.includes(' (KORREKT)')) {
+            ctx.fillStyle = '#3fb950'; // Grün für korrekte Antwort
+            ctx.font = 'bold 13px system-ui, Arial, sans-serif';
+          } else if (lineText.startsWith('🎯') || lineText.startsWith('🔘') || lineText.startsWith('📋')) {
+            ctx.fillStyle = '#f5c842';
+            ctx.font = 'bold 13px system-ui, Arial, sans-serif';
+          } else {
+            ctx.fillStyle = '#f5c842';
+            ctx.font = '13px system-ui, Arial, sans-serif';
+          }
+          ctx.fillText(lineText, PAD + PTS_W + qW + 10, textY);
+          textY += 18;
+        }
+      });
 
-      // Horizontale Trennlinie
+      // Horizontale Trennlinie am Zeilenende
       ctx.strokeStyle = 'rgba(255,255,255,0.05)';
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(PAD, curY + ROW_H);
-      ctx.lineTo(PAD + contentW, curY + ROW_H);
+      ctx.moveTo(PAD, curY + rowH);
+      ctx.lineTo(PAD + contentW, curY + rowH);
       ctx.stroke();
 
-      curY += ROW_H;
+      curY += rowH;
     });
 
     curY += GAP;
@@ -1268,6 +1326,100 @@ function downloadQuestionsImage() {
     URL.revokeObjectURL(url);
     showToast('🖼 Bild heruntergeladen');
   }, 'image/png');
+}
+
+function gpGetWrappedLines(ctx, text, maxW) {
+  const lines = [];
+  const paragraphs = String(text || '').split('\n');
+  
+  paragraphs.forEach(paragraph => {
+    const words = paragraph.split(' ');
+    let currentLine = '';
+    
+    words.forEach(word => {
+      const testLine = currentLine ? currentLine + ' ' + word : word;
+      if (ctx.measureText(testLine).width > maxW) {
+        if (currentLine) {
+          lines.push(currentLine);
+        }
+        currentLine = word;
+      } else {
+        currentLine = testLine;
+      }
+    });
+    if (currentLine) {
+      lines.push(currentLine);
+    }
+  });
+  return lines;
+}
+
+function getQuestionLines(ctx, q, qW) {
+  if (q.isJoker) {
+    return ['⭐ Joker-Feld (Keine Frage)'];
+  }
+  const text = q.question.text || '–';
+  const lines = gpGetWrappedLines(ctx, text, qW);
+  
+  const extras = [];
+  if (q.question.images?.length) extras.push(`📷 ${q.question.images.length}x Bild`);
+  if (q.question.videoUrl) extras.push('🎥 Video');
+  if (q.timerSeconds) extras.push(`⏱️ ${q.timerSeconds}s`);
+  
+  if (extras.length) {
+    lines.push('  ' + extras.join('  '));
+  }
+  return lines;
+}
+
+function getAnswerLines(ctx, q, aW) {
+  if (q.isJoker) {
+    return ['Punkte werden direkt gutgeschrieben.'];
+  }
+  
+  let lines = [];
+  
+  if (q.questionType === 'estimate') {
+    lines.push('🎯 Schätzfrage');
+    lines.push(`Korrekter Wert: ${q.estimateTarget !== null ? q.estimateTarget : '–'}`);
+    if (q.answer.text && q.answer.text.trim()) {
+      lines = lines.concat(gpGetWrappedLines(ctx, q.answer.text, aW));
+    }
+  } else if (q.questionType === 'multiple_choice') {
+    lines.push('🔘 Multiple Choice:');
+    if (q.mcOptions && q.mcOptions.length) {
+      q.mcOptions.forEach((opt, idx) => {
+        const prefix = String.fromCharCode(65 + idx) + ') ';
+        const optLines = gpGetWrappedLines(ctx, prefix + opt.text + (opt.isCorrect ? ' (KORREKT)' : ''), aW - 10);
+        lines = lines.concat(optLines);
+      });
+    } else if (q.answer.text) {
+      lines = lines.concat(gpGetWrappedLines(ctx, q.answer.text, aW));
+    }
+  } else if (q.questionType === 'list') {
+    lines.push('📋 Aufzählung:');
+    if (q.listItems && q.listItems.length) {
+      q.listItems.forEach((item, idx) => {
+        const prefix = `${idx + 1}. `;
+        const itemLines = gpGetWrappedLines(ctx, prefix + item, aW - 10);
+        lines = lines.concat(itemLines);
+      });
+    } else if (q.answer.text) {
+      lines = lines.concat(gpGetWrappedLines(ctx, q.answer.text, aW));
+    }
+  } else {
+    const text = q.answer.text || '–';
+    lines = gpGetWrappedLines(ctx, text, aW);
+  }
+  
+  const extras = [];
+  if (q.answer.images?.length) extras.push(`📷 ${q.answer.images.length}x Bild`);
+  if (q.answer.videoUrl) extras.push('🎥 Video');
+  
+  if (extras.length) {
+    lines.push('  ' + extras.join('  '));
+  }
+  return lines;
 }
 
 function gpRoundRect(ctx, x, y, w, h, r) {

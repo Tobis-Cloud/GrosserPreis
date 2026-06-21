@@ -16,7 +16,7 @@ function init() {
 
   const sorted = [...gs.teams].sort((a,b) => b.score - a.score);
 
-  renderWinner(sorted[0]);
+  renderWinner(sorted);
   renderPodium(sorted);
   renderChart(sorted);
   renderLog();
@@ -35,25 +35,61 @@ function init() {
 }
 
 // ── Gewinner ──
-function renderWinner(winner) {
-  if (!winner) return;
-  $('winnerName').textContent  = winner.name;
-  $('winnerName').style.color  = winner.color;
-  $('winnerScore').textContent = winner.score + ' Punkte';
-  document.querySelector('.winner-card').style.borderColor = winner.color;
-  document.querySelector('.winner-card').style.boxShadow  = `0 0 44px ${hexToRgba(winner.color, 0.3)}`;
+function renderWinner(sortedTeams) {
+  if (!sortedTeams || sortedTeams.length === 0) return;
+
+  const maxScore = sortedTeams[0].score;
+  const winners = sortedTeams.filter(t => t.score === maxScore);
+
+  const labelEl = document.querySelector('.winner-label');
+  const nameEl = $('winnerName');
+  const scoreEl = $('winnerScore');
+  const cardEl = document.querySelector('.winner-card');
+
+  if (winners.length > 1) {
+    // Gleichstand / Unentschieden
+    labelEl.textContent = 'Gleichstand!';
+    nameEl.textContent = winners.map(w => w.name).join(' & ');
+
+    const goldColor = 'hsl(42, 90%, 62%)';
+    nameEl.style.color = goldColor;
+    scoreEl.textContent = maxScore + ' Punkte';
+    cardEl.style.borderColor = goldColor;
+    cardEl.style.boxShadow = `0 0 44px ${hexToRgba('#ffd60a', 0.35)}`;
+  } else {
+    // Ein eindeutiger Gewinner
+    const winner = winners[0];
+    labelEl.textContent = 'Gewinner';
+    nameEl.textContent = winner.name;
+    nameEl.style.color = winner.color;
+    scoreEl.textContent = winner.score + ' Punkte';
+    cardEl.style.borderColor = winner.color;
+    cardEl.style.boxShadow = `0 0 44px ${hexToRgba(winner.color, 0.3)}`;
+  }
 }
 
 // ── Podium ──
 function renderPodium(sorted) {
   const medals = ['🥇','🥈','🥉'];
-  $('podiumGrid').innerHTML = sorted.map((team, i) => `
-    <div class="podium-card anim-in" style="animation-delay:${i*80}ms;border-color:${hexToRgba(team.color, 0.4)};">
-      <div class="podium-rank">${medals[i] || (i+1)+'.'}</div>
-      <div class="podium-name" style="color:${team.color};">${esc(team.name)}</div>
-      <div class="podium-score">${team.score} Pkt.</div>
-    </div>
-  `).join('');
+  let currentRank = 1;
+  let lastScore = null;
+
+  $('podiumGrid').innerHTML = sorted.map((team, i) => {
+    if (lastScore !== null && team.score < lastScore) {
+      currentRank = i + 1;
+    }
+    lastScore = team.score;
+
+    const rankText = medals[currentRank - 1] || `${currentRank}.`;
+
+    return `
+      <div class="podium-card anim-in" style="animation-delay:${i*80}ms;border-color:${hexToRgba(team.color, 0.4)};">
+        <div class="podium-rank">${rankText}</div>
+        <div class="podium-name" style="color:${team.color};">${esc(team.name)}</div>
+        <div class="podium-score">${team.score} Pkt.</div>
+      </div>
+    `;
+  }).join('');
 }
 
 // ── Punkte-Verlauf Chart ──
@@ -254,12 +290,15 @@ function downloadResultsImage() {
   
   // 3. Teams sortieren
   const sorted = [...gs.teams].sort((a,b) => b.score - a.score);
-  const winner = sorted[0];
+  const maxScore = sorted[0] ? sorted[0].score : 0;
+  const winners = sorted.filter(t => t.score === maxScore);
+  const isTie = winners.length > 1;
+  const primaryWinner = winners[0];
   
   // 4. Gewinner (Linke Spalte)
   const leftX = 350;
   ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
-  ctx.strokeStyle = winner ? hexToRgba(winner.color, 0.6) : 'rgba(255, 183, 3, 0.5)';
+  ctx.strokeStyle = isTie ? 'rgba(255, 183, 3, 0.6)' : (primaryWinner ? hexToRgba(primaryWinner.color, 0.6) : 'rgba(255, 183, 3, 0.5)');
   ctx.lineWidth = 3;
   
   const cardW = 500;
@@ -282,15 +321,25 @@ function downloadResultsImage() {
   
   ctx.fillStyle = '#ffb703';
   ctx.font = 'bold 20px system-ui, -apple-system, sans-serif';
-  ctx.fillText('1. PLATZ / SIEGER', leftX, cardY + 170);
+  ctx.fillText(isTie ? 'GLEICHSTAND / SIEGER' : '1. PLATZ / SIEGER', leftX, cardY + 170);
   
-  ctx.fillStyle = winner ? winner.color : '#fff';
-  ctx.font = 'bold 44px system-ui, -apple-system, sans-serif';
-  ctx.fillText(winner ? winner.name : 'Kein Team', leftX, cardY + 230);
+  ctx.fillStyle = isTie ? '#ffb703' : (primaryWinner ? primaryWinner.color : '#fff');
+  if (isTie) {
+    const winnerNames = winners.map(w => w.name).join(' & ');
+    if (winnerNames.length > 20) {
+      ctx.font = 'bold 30px system-ui, -apple-system, sans-serif';
+    } else {
+      ctx.font = 'bold 38px system-ui, -apple-system, sans-serif';
+    }
+    ctx.fillText(winnerNames, leftX, cardY + 230);
+  } else {
+    ctx.font = 'bold 44px system-ui, -apple-system, sans-serif';
+    ctx.fillText(primaryWinner ? primaryWinner.name : 'Kein Team', leftX, cardY + 230);
+  }
   
   ctx.fillStyle = '#fff';
   ctx.font = 'bold 36px system-ui, -apple-system, sans-serif';
-  ctx.fillText(winner ? `${winner.score} Punkte` : '0 Punkte', leftX, cardY + 290);
+  ctx.fillText(primaryWinner ? `${primaryWinner.score} Punkte` : '0 Punkte', leftX, cardY + 290);
   
   // 5. Platzierungen (Rechte Spalte)
   const rightX = 650;
@@ -298,14 +347,22 @@ function downloadResultsImage() {
   const rowW = 460;
   const rowH = 70;
   
+  let currentRank = 1;
+  let lastScore = null;
+  
   sorted.forEach((team, idx) => {
     if (idx >= 6) return;
     
     const currY = listY + idx * (rowH + 10);
     
+    if (lastScore !== null && team.score < lastScore) {
+      currentRank = idx + 1;
+    }
+    lastScore = team.score;
+    
     ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-    if (idx === 0) {
+    if (currentRank === 1) {
       ctx.fillStyle = 'rgba(255, 183, 3, 0.08)';
       ctx.strokeStyle = 'rgba(255, 183, 3, 0.3)';
     }
@@ -323,7 +380,7 @@ function downloadResultsImage() {
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 24px system-ui, -apple-system, sans-serif';
     const medals = ['🥇', '🥈', '🥉'];
-    ctx.fillText(medals[idx] || ` ${idx + 1}.`, rightX + 20, currY + rowH / 2 + 8);
+    ctx.fillText(medals[currentRank - 1] || ` ${currentRank}.`, rightX + 20, currY + rowH / 2 + 8);
     
     ctx.fillStyle = team.color;
     ctx.font = 'bold 22px system-ui, -apple-system, sans-serif';
